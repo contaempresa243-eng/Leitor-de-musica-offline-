@@ -1,4 +1,4 @@
-const NOME_CACHE = 'leitor-musica-v4';
+const NOME_CACHE = 'leitor-musica-v5';
 const ARQUIVOS_CACHE = ['./index.html', './manifest.json'];
 
 self.addEventListener('install', (e) => {

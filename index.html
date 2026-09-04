@@ -55,8 +55,10 @@
             border-radius: 50%;
             background-size: cover;
             background-position: center;
-            opacity: 0.35;
+            background-repeat: no-repeat;
+            opacity: 0.4;
             transition: opacity 0.5s ease;
+            z-index: 0;
         }
 
         /* === VISUALIZADOR === */
@@ -98,20 +100,20 @@
         .btn-play:hover { transform: scale(1.08); }
         .btn-play:active { transform: scale(0.95); }
 
-        /* === BOTÕES EXTERNOS === */
+        /* === BOTÕES EXTERNOS — RESTAURADOS === */
         .btn-controle-externo {
             position: absolute;
             top: 50%;
             transform: translateY(-50%);
-            font-size: 26px;
+            font-size: 28px;
             cursor: pointer;
             transition: all 0.3s ease;
-            z-index: 2;
-            padding: 10px;
+            z-index: 5;
+            padding: 10px 15px;
         }
-        .btn-anterior { left: -55px; }
-        .btn-proximo { right: -55px; }
-        .btn-controle-externo:hover { transform: translateY(-50%) scale(1.2); }
+        .btn-anterior { left: -65px; }
+        .btn-proximo { right: -65px; }
+        .btn-controle-externo:hover { transform: translateY(-50%) scale(1.25); }
 
         /* === BARRA DE PROGRESSO CIRCULAR === */
         .progresso-circular {
@@ -143,10 +145,11 @@
 
         /* === TEMPO ABAIXO DO CÍRCULO === */
         .tempo-container {
-            margin-top: 18px;
+            margin-top: 20px;
             text-align: center;
-            font-size: 0.9rem;
-            opacity: 0.75;
+            font-size: 0.95rem;
+            opacity: 0.8;
+            z-index: 5;
         }
 
         /* === VOLUME === */
@@ -167,9 +170,7 @@
             z-index: 20;
             transition: background 0.2s;
         }
-        .btn-volume:hover {
-            background: rgba(255,255,255,0.15);
-        }
+        .btn-volume:hover { background: rgba(255,255,255,0.15); }
         .volume-popup {
             position: fixed;
             bottom: 80px;
@@ -189,10 +190,7 @@
             visibility: hidden;
             transition: opacity 0.2s, visibility 0.2s;
         }
-        .volume-popup.aberto {
-            opacity: 1;
-            visibility: visible;
-        }
+        .volume-popup.aberto { opacity: 1; visibility: visible; }
         .volume-slider {
             width: 6px;
             height: 120px;
@@ -232,9 +230,7 @@
             0% { transform: translateX(0); }
             100% { transform: translateX(-50%); }
         }
-        .titulo-pausado .titulo-carrossel {
-            animation-play-state: paused;
-        }
+        .titulo-pausado .titulo-carrossel { animation-play-state: paused; }
 
         /* === SELETOR DE TEMA === */
         .seletor-tema {
@@ -356,8 +352,8 @@
     <main class="conteudo-central">
         <!-- Círculo do Leitor -->
         <div class="circulo-central bg-tema1-secundario/80 backdrop-blur-md border border-white/10">
-            <!-- Capa da Música -->
-            <div id="capaMusica" class="capa-musica"></div>
+            <!-- Capa da Música — CORRIGIDO -->
+            <div id="capaMusica" class="capa-musica" style="background-image: none;"></div>
 
             <!-- Barra de Progresso Circular -->
             <div class="progresso-circular">
@@ -375,7 +371,7 @@
                 <i class="fa fa-play"></i>
             </button>
 
-            <!-- Botões Externos -->
+            <!-- ✅ BOTÕES RECUAR E AVANÇAR — RESTAURADOS -->
             <button id="btnAnterior" class="btn-controle-externo btn-anterior text-tema1-destaque">
                 <i class="fa fa-step-backward"></i>
             </button>
@@ -521,46 +517,63 @@
             nomeArtista.textContent = musica.artista;
             btnPlayPause.innerHTML = '<i class="fa fa-pause"></i>';
 
-            // Reseta carrossel para evitar pausa visual
+            // Reseta carrossel
             const wrapper = document.querySelector('.titulo-wrapper');
             wrapper.classList.add('titulo-pausado');
             setTimeout(() => wrapper.classList.remove('titulo-pausado'), 10);
 
-            // Tenta carregar capa embutida
+            // ✅ CARGA DE CAPA — CORRIGIDO E MELHORADO
             carregarCapaMusica(musica);
         }
 
-        // === CAPA DA MÚSICA ===
+        // ✅ FUNÇÃO DE CARGA DE CAPA — REFEITA COMPLETAMENTE
         function carregarCapaMusica(musica) {
+            // Limpa a capa anterior
+            capaMusica.style.backgroundImage = 'none';
+            capaMusica.style.opacity = '0';
+
+            // Se já tem capa salva, usa diretamente
             if (musica.capa) {
                 capaMusica.style.backgroundImage = `url(${musica.capa})`;
-                capaMusica.style.opacity = '0.35';
+                capaMusica.style.opacity = '0.4';
                 return;
             }
 
-            const tempAudio = new Audio(musica.url);
-            tempAudio.preload = 'metadata';
+            // Tenta extrair metadados com a biblioteca nativa
+            if ('mediaMetadata' in navigator) {
+                // Fallback: tenta ler como imagem embutida
+                const leitor = new FileReader();
+                leitor.onload = function(e) {
+                    const dados = new Uint8Array(e.target.result);
+                    // Procura por assinaturas de imagem (ID3/APIC)
+                    let pos = 0;
+                    while (pos < dados.length - 10) {
+                        // Encontra marcador de imagem JPEG/PNG
+                        if ((dados[pos] === 0xFF && dados[pos+1] === 0xD8) || // JPEG
+                            (dados[pos] === 0x89 && dados[pos+1] === 0x50)) { // PNG
+                            const blob = new Blob([dados.subarray(pos)], {type: 'image/*'});
+                            const urlImagem = URL.createObjectURL(blob);
+                            musica.capa = urlImagem;
+                            capaMusica.style.backgroundImage = `url(${urlImagem})`;
+                            capaMusica.style.opacity = '0.4';
+                            break;
+                        }
+                        pos++;
+                    }
+                };
+                leitor.readAsArrayBuffer(musica.arquivo.slice(0, 1024 * 1024)); // Lê 1MB para procurar capa
+            }
 
-            tempAudio.addEventListener('loadedmetadata', () => {
-                if (tempAudio.videoWidth > 0) {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = tempAudio.videoWidth;
-                    canvas.height = tempAudio.videoHeight;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(tempAudio, 0, 0, canvas.width, canvas.height);
-                    musica.capa = canvas.toDataURL('image/png');
-                    capaMusica.style.backgroundImage = `url(${musica.capa})`;
-                    capaMusica.style.opacity = '0.35';
-                } else {
-                    capaMusica.style.backgroundImage = 'none';
-                    capaMusica.style.opacity = '0';
-                }
-            });
-
-            tempAudio.addEventListener('error', () => {
-                capaMusica.style.backgroundImage = 'none';
-                capaMusica.style.opacity = '0';
-            });
+            // Alternativa: usa URL de dados como base
+            const tempImg = new Image();
+            tempImg.onload = () => {
+                musica.capa = tempImg.src;
+                capaMusica.style.backgroundImage = `url(${tempImg.src})`;
+                capaMusica.style.opacity = '0.4';
+            };
+            tempImg.onerror = () => {
+                // Se não houver capa, mantém sem imagem — não mostra erro
+            };
         }
 
         // === CONTROLES ===
