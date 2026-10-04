@@ -1,85 +1,80 @@
-// --- Ficheiro: sw.js ---
-const NOME_CACHE = 'leitor-musica-v6'; // Incremente a versão se alterar os ficheiros
-
-// Lista de ficheiros essenciais para funcionar offline
+// Versão do cache
+const NOME_CACHE = 'leitor-musica-v22';
 const ARQUIVOS_CACHE = [
-    './index.html',
     './manifest.json',
-    // Adicione aqui outros ficheiros estáticos essenciais se os tiver localmente:
-    // './estilos.css',
-    // './script.js',
-    // Nota: Ficheiros de CDNs (como Tailwind e FontAwesome) serão cacheados dinamicamente pelo fetch(), mas adicione-os aqui se preferir.
+    './icon.svg'
+    // NÃO incluímos o index.html aqui — ele vai ser sempre da rede
 ];
 
-// 1. Instalação: Guardar os ficheiros essenciais no cache
+// Instalação
 self.addEventListener('install', (event) => {
-    console.log('SW: A instalar...');
     event.waitUntil(
-        caches.open(NOME_CACHE)
-            .then((cache) => {
-                console.log('SW: A adicionar ficheiros essenciais ao cache');
-                return cache.addAll(ARQUIVOS_CACHE);
-            })
+        caches.open(NOME_CACHE).then(async (cache) => {
+            const resultados = await Promise.allSettled(
+                ARQUIVOS_CACHE.map(url => cache.add(url))
+            );
+            resultados.forEach((r, i) => {
+                if (r.status === 'rejected') {
+                    console.warn('SW: falhou ao cachear', ARQUIVOS_CACHE[i], r.reason);
+                }
+            });
+        })
     );
-    // Força o SW a assumir o controlo imediatamente após a instalação
     self.skipWaiting();
 });
 
-// 2. Ativação: Limpar caches antigos
+// Ativação
 self.addEventListener('activate', (event) => {
-    console.log('SW: A ativar...');
     event.waitUntil(
         caches.keys().then((chaves) => {
             return Promise.all(
                 chaves.filter((chave) => chave !== NOME_CACHE)
-                    .map((chave) => {
-                        console.log('SW: A remover cache antigo:', chave);
-                        return caches.delete(chave);
-                    })
+                    .map((chave) => caches.delete(chave))
             );
         })
     );
     self.clients.claim();
 });
 
-// 3. Fetch: Estratégia "Cache First" com fallback para Rede
+// Fetch
 self.addEventListener('fetch', (event) => {
-    // Ignorar pedidos que não sejam HTTP (ex: chrome-extension://)
-    if (!event.request.url.startsWith('http')) return;
+    const url = new URL(event.request.url);
 
+    // ESTRATÉGIA CRÍTICA: HTML e JS e CSS vêm SEMPRE da rede (network-first).
+    // Só os assets estáticos é que vêm do cache.
+    if (
+        event.request.mode === 'navigate' ||
+        url.pathname.endsWith('.html') ||
+        url.pathname.endsWith('.js') ||
+        url.pathname.endsWith('.css') ||
+        url.pathname.endsWith('.json')
+    ) {
+        event.respondWith(
+            fetch(event.request)
+                .then((resp) => {
+                    // Atualiza o cache em segundo plano
+                    if (resp && resp.status === 200 && resp.type === 'basic') {
+                        const clone = resp.clone();
+                        caches.open(NOME_CACHE).then(c => c.put(event.request, clone));
+                    }
+                    return resp;
+                })
+                .catch(() => caches.match(event.request))
+        );
+        return;
+    }
+
+    // Assets (ícones, imagens, fontes, etc.): cache-first
     event.respondWith(
-        caches.match(event.request)
-            .then((respostaNoCache) => {
-                // Se o ficheiro estiver no cache, retorna-o imediatamente (super rápido, funciona offline)
-                if (respostaNoCache) {
-                    return respostaNoCache;
+        caches.match(event.request).then((cached) => {
+            if (cached) return cached;
+            return fetch(event.request).then((resp) => {
+                if (resp && resp.status === 200) {
+                    const clone = resp.clone();
+                    caches.open(NOME_CACHE).then(c => c.put(event.request, clone));
                 }
-
-                // Se NÃO estiver no cache, tenta buscar na rede
-                return fetch(event.request)
-                    .then((respostaDaRede) => {
-                        // Valida se a resposta da rede é válida (status 200, tipo 'basic')
-                        if (!respostaDaRede || respostaDaRede.status !== 200 || respostaDaRede.type !== 'basic') {
-                            return respostaDaRede;
-                        }
-
-                        // Opcional: Clona a resposta da rede e guarda no cache para a próxima vez
-                        let respostaParaCache = respostaDaRede.clone();
-                        caches.open(NOME_CACHE).then((cache) => {
-                            cache.put(event.request, respostaParaCache);
-                        });
-
-                        return respostaDaRede;
-                    })
-                    .catch(() => {
-                        // Se ambos falharem (sem cache E sem rede), mostra uma página de erro padrão OU um fallback de erro
-                        // Se o pedido original for para uma página HTML, retorna o index.html (que está em cache)
-                        if (event.request.headers.get('accept').includes('text/html')) {
-                             return caches.match('./index.html');
-                        }
-                        // Para outros tipos de ficheiros (imagens, etc.), pode retornar um fallback genérico, se tiver
-                        // return caches.match('./offline.svg');
-                    });
-            })
+                return resp;
+            });
+        })
     );
 });
