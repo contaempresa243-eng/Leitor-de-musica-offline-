@@ -889,8 +889,11 @@
     <div class="bib-header">
         <h1 class="bib-titulo">Música</h1>
         <div class="bib-header-acoes">
-            <button class="bib-btn-header" id="btnBusca" title="Pesquisar"><i class="fa fa-search"></i></button>
-            <button class="bib-btn-header" id="btnTema" title="Tema"><i class="fa fa-paint-brush"></i></button>
+    <button class="bib-btn-header" id="btnBusca" title="Pesquisar"><i class="fa fa-search"></i></button>
+    <button class="bib-btn-header" id="btnAdicionarMais" title="Adicionar músicas">
+        <i class="fa fa-plus"></i>
+    </button>
+    <button class="bib-btn-header" id="btnTema" title="Tema"><i class="fa fa-paint-brush"></i></button>
         </div>
     </div>
     <div class="busca-wrap" id="buscaWrap">
@@ -2022,6 +2025,24 @@ bibAbas.forEach(aba => {
     });
 });
 
+/* ============ ADICIONAR MAIS MÚSICAS ============ */
+const btnAdicionarMais = document.getElementById('btnAdicionarMais');
+
+btnAdicionarMais.addEventListener('click', async () => {
+    // Tenta a File System Access API primeiro (Android/desktop)
+    if ('showDirectoryPicker' in window) {
+        try {
+            const dirHandle = await window.showDirectoryPicker();
+            await processarDiretorioFS(dirHandle);
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.warn('FS API falhou, usando fallback:', err);
+        }
+    }
+    // Fallback: input de pasta (iOS e outros)
+    inputPasta.click();
+});
 /* ============ BUSCA ============ */
 btnBusca.addEventListener('click', () => {
     buscaWrap.classList.toggle('aberto');
