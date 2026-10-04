@@ -1288,26 +1288,43 @@ function salvarMusicaDB(m) {
     return new Promise((resolve, reject) => {
         if (!db) return resolve();
         const tx = db.transaction(['musicas'], 'readwrite');
-        const req = tx.objectStore('musicas').put({
-            id: m.id, nome: m.nome, artista: m.artista, arquivo: m.arquivo, pasta: m.pasta || ''
-        });
+        const dados = {
+            id: m.id, nome: m.nome, artista: m.artista,
+            arquivo: m.arquivo, pasta: m.pasta || ''
+        };
+        // Só inclui capaBlob se já existir — evita apagar uma capa guardada
+        if (m.capaBlob) dados.capaBlob = m.capaBlob;
+        const req = tx.objectStore('musicas').put(dados);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
     });
-}
+  }
 
 function carregarMusicasDB() {
     return new Promise((resolve, reject) => {
         if (!db) return resolve([]);
         const req = db.transaction(['musicas'], 'readonly').objectStore('musicas').getAll();
-        req.onsuccess = () => resolve(req.result.map(item => ({
-            id: item.id, nome: item.nome, artista: item.artista,
-            pasta: item.pasta || '', arquivo: item.arquivo,
-            url: URL.createObjectURL(item.arquivo), capa: null
-        })));
+        req.onsuccess = () => resolve(req.result.map(item => {
+            const musica = {
+                id: item.id,
+                nome: item.nome,
+                artista: item.artista,
+                pasta: item.pasta || '',
+                arquivo: item.arquivo,
+                url: URL.createObjectURL(item.arquivo),
+                capa: null,
+                capaBlob: null
+            };
+            // Se a capa já estava guardada, cria a URL imediatamente
+            if (item.capaBlob) {
+                musica.capaBlob = item.capaBlob;
+                musica.capa = URL.createObjectURL(item.capaBlob);
+            }
+            return musica;
+        }));
         req.onerror = () => reject(req.error);
     });
-}
+  }
 
 function salvarMeta(chave, valor) {
     if (!db) return;
@@ -1727,9 +1744,7 @@ function extrairCapa(musica, callback) {
                 try {
                     const bytes = new Uint8Array(pic.data);
                     const blob = new Blob([bytes], { type: pic.format || 'image/jpeg' });
-                    const url = URL.createObjectURL(blob);
-                    musica.capa = url;
-                    callback(url);
+                    aplicarEGuardarCapa(musica, blob, callback);
                     return;
                 } catch (e) { /* cai no scanner */ }
             }
@@ -1739,6 +1754,32 @@ function extrairCapa(musica, callback) {
     });
 }
 
+// Aplica a capa à UI E guarda o Blob no IndexedDB (sem bloquear)
+function aplicarEGuardarCapa(musica, blob, callback) {
+    musica.capaBlob = blob;
+    musica.capa = URL.createObjectURL(blob);
+    callback(musica.capa);
+
+    // Persiste no IndexedDB em segundo plano
+    if (db) {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (dados) {
+                    dados.capaBlob = blob;
+                    store.put(dados);
+                }
+            };
+        } catch (e) {
+            console.warn('Falha ao guardar capa no DB:', e);
+        }
+    }
+  }
+
+  
 function extrairCapaScanner(musica, callback) {
     const leitor = new FileReader();
     leitor.onload = e => {
@@ -1750,13 +1791,11 @@ function extrairCapaScanner(musica, callback) {
                     if (dados[j] === 0xFF && dados[j+1] === 0xD9) {
                         const tamanho = j - i + 2;
                         if (tamanho > 3000) {
-                            try {
-                                const blob = new Blob([dados.slice(i, j + 2)], { type: 'image/jpeg' });
-                                const url = URL.createObjectURL(blob);
-                                musica.capa = url;
-                                callback(url);
-                                return;
-                            } catch (err) { /* continua */ }
+    try {
+        const blob = new Blob([dados.slice(i, j + 2)], { type: 'image/jpeg' });
+        aplicarEGuardarCapa(musica, blob, callback);
+        return;
+    } catch (err) { /* continua */ }
                         }
                     }
                 }
@@ -1767,15 +1806,13 @@ function extrairCapaScanner(musica, callback) {
             if (dados[i] === 0x89 && dados[i+1] === 0x50 && dados[i+2] === 0x4E && dados[i+3] === 0x47) {
                 for (let j = i + 4; j < dados.length - 8; j++) {
                     if (dados[j] === 0x49 && dados[j+1] === 0x45 && dados[j+2] === 0x4E &&
-                        dados[j+3] === 0x44 && dados[j+4] === 0xAE && dados[j+5] === 0x42 &&
-                        dados[j+6] === 0x60 && dados[j+7] === 0x82) {
-                        try {
-                            const blob = new Blob([dados.slice(i, j + 8)], { type: 'image/png' });
-                            const url = URL.createObjectURL(blob);
-                            musica.capa = url;
-                            callback(url);
-                            return;
-                        } catch (err) { /* continua */ }
+    dados[j+3] === 0x44 && dados[j+4] === 0xAE && dados[j+5] === 0x42 &&
+    dados[j+6] === 0x60 && dados[j+7] === 0x82) {
+    try {
+        const blob = new Blob([dados.slice(i, j + 8)], { type: 'image/png' });
+        aplicarEGuardarCapa(musica, blob, callback);
+        return;
+    } catch (err) { /* continua */ }
                     }
                 }
             }

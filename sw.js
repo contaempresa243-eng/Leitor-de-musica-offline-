@@ -1,5 +1,5 @@
 // Versão do cache
-const NOME_CACHE = 'leitor-musica-v24';
+const NOME_CACHE = 'leitor-musica-v25';
 const ARQUIVOS_CACHE = [
     './manifest.json',
     './icon.svg'
