@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Leitor Offline</title>
 <link rel="manifest" href="manifest.json">
-  <link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
 <meta name="theme-color" content="#0a192f">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
 <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
@@ -18,6 +18,7 @@
         --cor-cartao: rgba(255,255,255,0.06);
         --cor-superficie: rgba(255,255,255,0.06);
         --cor-superficie-hover: rgba(255,255,255,0.1);
+        --cor-fav: #ff4d6d;
     }
 
     * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -182,7 +183,7 @@
         backdrop-filter: blur(18px); -webkit-backdrop-filter: blur(18px);
         border: 1px solid rgba(255,255,255,0.1);
         border-radius: 16px; padding: 10px 12px;
-        display: flex; align-items: center; gap: 12px;
+        display: flex; align-items: center; gap: 10px;
         z-index: 30; cursor: pointer;
         transform: translateY(140%);
         transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -243,6 +244,7 @@
         font-size: 18px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         opacity: 0.8;
+        position: relative;
     }
     .player-btn-voltar:hover { opacity: 1; background: rgba(255,255,255,0.06); }
     .centro-player {
@@ -406,6 +408,627 @@
     .cartao.modelo-neon .cartao-capa { filter: contrast(1.1) saturate(1.3); }
     .cartao.modelo-neon .cartao-titulo {
         text-shadow: 0 0 10px var(--cor-destaque), 0 0 20px var(--cor-destaque);
+    }
+
+    /* ============ CORAÇÃO DE FAVORITO ============ */
+    .cartao-fav {
+        position: absolute;
+        top: 14px;
+        right: 16px;
+        z-index: 5;
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(0,0,0,0.45);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #fff;
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: transform 0.2s, color 0.2s, background 0.2s;
+        opacity: 0.85;
+    }
+    .cartao-fav:hover { opacity: 1; transform: scale(1.08); }
+    .cartao-fav:active { transform: scale(0.92); }
+    .cartao-fav.ativo {
+        color: var(--cor-fav);
+        opacity: 1;
+        background: rgba(255,77,109,0.12);
+        border-color: rgba(255,77,109,0.3);
+    }
+
+    .mini-btn-fav {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: var(--cor-texto);
+        font-size: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+        opacity: 0.55;
+        transition: opacity 0.2s, color 0.2s, transform 0.15s;
+    }
+    .mini-btn-fav:hover { opacity: 1; }
+    .mini-btn-fav:active { transform: scale(0.9); }
+    .mini-btn-fav.ativo {
+        color: var(--cor-fav);
+        opacity: 1;
+    }
+
+    .musica-btn-fav {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: var(--cor-texto);
+        opacity: 0.35;
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: opacity 0.2s, color 0.2s, transform 0.15s;
+    }
+    .musica-btn-fav:hover { opacity: 1; }
+    .musica-btn-fav:active { transform: scale(0.85); }
+    .musica-btn-fav.ativo {
+        color: var(--cor-fav);
+        opacity: 1;
+    }
+
+    @keyframes coracaoPump {
+        0%   { transform: scale(1); }
+        35%  { transform: scale(1.35); }
+        65%  { transform: scale(0.9); }
+        100% { transform: scale(1); }
+    }
+    .coracao-pump i { animation: coracaoPump 0.45s ease; }
+
+    /* ============ EDITAR METADADOS ============ */
+    .edit-meta-capa-wrap {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 22px;
+    }
+    .edit-meta-capa {
+        width: 130px;
+        height: 130px;
+        border-radius: 14px;
+        background: rgba(255,255,255,0.05);
+        background-size: cover;
+        background-position: center;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 42px;
+        color: var(--cor-destaque);
+        overflow: hidden;
+        border: 2px solid rgba(255,255,255,0.08);
+        position: relative;
+    }
+    .edit-meta-capa-btn {
+        padding: 8px 16px;
+        border-radius: 100px;
+        background: rgba(255,255,255,0.08);
+        color: var(--cor-texto);
+        border: none;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+    }
+    .edit-meta-capa-btn:hover { background: rgba(255,255,255,0.15); }
+    .edit-meta-capa-btn-remover {
+        position: absolute;
+        top: 6px;
+        right: calc(50% - 78px);
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(255,77,109,0.9);
+        color: #fff;
+        border: none;
+        font-size: 12px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: transform 0.15s;
+    }
+    .edit-meta-capa-btn-remover:hover { transform: scale(1.1); }
+
+    .edit-meta-label {
+        display: block;
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: 6px;
+        margin-top: 8px;
+    }
+    .edit-meta-input {
+        width: 100%;
+        padding: 12px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: var(--cor-texto);
+        font-size: 0.95rem;
+        outline: none;
+        margin-bottom: 8px;
+        font-family: inherit;
+    }
+    .edit-meta-input::placeholder { opacity: 0.35; }
+    .edit-meta-input:focus { border-color: var(--cor-destaque); }
+
+    .edit-meta-acoes {
+        display: flex;
+        gap: 10px;
+        margin-top: 20px;
+    }
+    .edit-meta-btn {
+        flex: 1;
+        padding: 13px;
+        border-radius: 100px;
+        border: none;
+        font-size: 0.92rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: transform 0.15s, background 0.2s;
+    }
+    .edit-meta-btn:active { transform: scale(0.96); }
+    .edit-meta-btn.primario {
+        background: var(--cor-destaque);
+        color: #0a192f;
+    }
+    .edit-meta-btn.secundario {
+        background: rgba(255,255,255,0.08);
+        color: var(--cor-texto);
+    }
+
+    /* ============ PAINEL DE LETRAS ============ */
+    .letras-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 60;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.25s, visibility 0.25s;
+    }
+    .letras-overlay.aberto { opacity: 1; visibility: visible; }
+
+    .letras-painel {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: 68vh;
+        background: rgba(10, 20, 35, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 26px 26px 0 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        z-index: 61;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .letras-painel.aberto { transform: translateY(0); }
+
+    .letras-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        flex-shrink: 0;
+    }
+    .letras-titulo {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--cor-texto);
+    }
+    .letras-btn-fechar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: var(--cor-texto);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.7;
+    }
+    .letras-btn-fechar:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+
+    .letras-conteudo {
+        flex: 1;
+        overflow-y: auto;
+        padding: 30px 28px 60px;
+        -webkit-overflow-scrolling: touch;
+        text-align: center;
+    }
+
+    .letras-vazio {
+        text-align: center;
+        padding: 60px 20px;
+        opacity: 0.5;
+    }
+    .letras-vazio i { font-size: 2.5rem; margin-bottom: 14px; display: block; }
+    .letras-vazio p { font-size: 0.9rem; }
+
+    .letra-linha {
+        font-size: 1.05rem;
+        font-weight: 600;
+        line-height: 1.5;
+        padding: 10px 6px;
+        color: var(--cor-texto);
+        opacity: 0.35;
+        transition: opacity 0.35s ease, color 0.35s ease, transform 0.35s ease;
+        transform: scale(0.97);
+    }
+    .letra-linha.ativa {
+        color: var(--cor-destaque);
+        opacity: 1;
+        transform: scale(1.04);
+        font-weight: 700;
+        text-shadow: 0 0 20px rgba(100,255,218,0.3);
+    }
+    .letra-linha.passada { opacity: 0.25; }
+
+    .letra-linha-simples {
+        font-size: 1rem;
+        line-height: 1.7;
+        color: var(--cor-texto);
+        white-space: pre-wrap;
+        text-align: left;
+        padding: 6px 8px;
+        opacity: 0.85;
+    }
+
+    .letras-acoes {
+        padding: 12px 20px 18px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+    }
+    .letras-btn {
+        padding: 10px 20px;
+        border-radius: 100px;
+        background: var(--cor-destaque);
+        color: #0a192f;
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.15s;
+    }
+    .letras-btn:active { transform: scale(0.96); }
+
+    .letras-textarea {
+        width: 100%;
+        min-height: 220px;
+        padding: 14px 16px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        background: rgba(255,255,255,0.05);
+        color: var(--cor-texto);
+        font-size: 0.9rem;
+        outline: none;
+        font-family: ui-monospace, "SF Mono", Menlo, monospace;
+        resize: vertical;
+        line-height: 1.5;
+    }
+    .letras-textarea:focus { border-color: var(--cor-destaque); }
+
+    body.letras-aberta .controles,
+    body.letras-aberta .hint-swipe {
+        opacity: 0.3; pointer-events: none;
+    }
+
+    /* ============ EQUALIZADOR ============ */
+    .eq-overlay {
+        position: fixed; inset: 0;
+        background: rgba(0,0,0,0.5);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        z-index: 62;
+        opacity: 0; visibility: hidden;
+        transition: opacity 0.25s, visibility 0.25s;
+    }
+    .eq-overlay.aberto { opacity: 1; visibility: visible; }
+
+    .eq-painel {
+        position: fixed;
+        left: 0; right: 0; bottom: 0;
+        height: 76vh;
+        background: rgba(10, 20, 35, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 26px 26px 0 0;
+        border-top: 1px solid rgba(255,255,255,0.1);
+        z-index: 63;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 -20px 60px rgba(0,0,0,0.5);
+        padding-bottom: env(safe-area-inset-bottom, 0);
+    }
+    .eq-painel.aberto { transform: translateY(0); }
+
+    .eq-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 20px 12px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+        flex-shrink: 0;
+    }
+    .eq-titulo {
+        font-size: 1.05rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--cor-texto);
+    }
+    .eq-btn-fechar {
+        width: 36px; height: 36px;
+        border-radius: 50%;
+        background: transparent;
+        border: none;
+        color: var(--cor-texto);
+        font-size: 16px;
+        cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        opacity: 0.7;
+    }
+    .eq-btn-fechar:hover { opacity: 1; background: rgba(255,255,255,0.08); }
+
+    .eq-presets {
+        display: flex;
+        gap: 8px;
+        padding: 14px 16px;
+        overflow-x: auto;
+        flex-shrink: 0;
+        scrollbar-width: none;
+        border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .eq-presets::-webkit-scrollbar { display: none; }
+
+    .eq-preset-btn {
+        padding: 8px 16px;
+        border-radius: 100px;
+        background: rgba(255,255,255,0.06);
+        color: var(--cor-texto);
+        border: none;
+        cursor: pointer;
+        font-size: 0.78rem;
+        font-weight: 600;
+        white-space: nowrap;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+    .eq-preset-btn:hover { background: rgba(255,255,255,0.12); }
+    .eq-preset-btn.ativo {
+        background: var(--cor-destaque);
+        color: #0a192f;
+    }
+
+    .eq-sliders {
+        flex: 1;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        padding: 20px 12px;
+        overflow: hidden;
+        min-height: 0;
+    }
+
+    .eq-slider-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        height: 100%;
+        max-height: 300px;
+    }
+
+    .eq-slider {
+        flex: 1;
+        width: 6px;
+        border-radius: 3px;
+        background: rgba(255,255,255,0.1);
+        position: relative;
+        cursor: pointer;
+        min-height: 130px;
+        max-height: 200px;
+        touch-action: none;
+    }
+    .eq-slider-fill {
+        position: absolute;
+        left: 0;
+        right: 0;
+        background: var(--cor-destaque);
+        border-radius: 3px;
+        box-shadow: 0 0 8px var(--cor-destaque);
+    }
+    .eq-slider-handle {
+        position: absolute;
+        left: 50%;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--cor-destaque);
+        transform: translate(-50%, -50%);
+        box-shadow: 0 2px 8px rgba(0,0,0,0.4), 0 0 10px rgba(100,255,218,0.3);
+        pointer-events: none;
+    }
+
+    .eq-slider-label {
+        font-size: 0.7rem;
+        font-weight: 700;
+        opacity: 0.7;
+        letter-spacing: 0.03em;
+        font-variant-numeric: tabular-nums;
+        min-width: 40px;
+        text-align: center;
+    }
+    .eq-slider-freq {
+        font-size: 0.6rem;
+        opacity: 0.4;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .eq-acoes {
+        padding: 12px 20px 18px;
+        border-top: 1px solid rgba(255,255,255,0.08);
+        flex-shrink: 0;
+        display: flex;
+        justify-content: center;
+    }
+    .eq-btn-reset {
+        padding: 10px 22px;
+        border-radius: 100px;
+        background: rgba(255,255,255,0.08);
+        color: var(--cor-texto);
+        border: none;
+        font-size: 0.85rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        transition: transform 0.15s, background 0.2s;
+    }
+    .eq-btn-reset:hover { background: rgba(255,255,255,0.15); }
+    .eq-btn-reset:active { transform: scale(0.96); }
+
+    body.eq-aberta .controles,
+    body.eq-aberta .hint-swipe {
+        opacity: 0.3; pointer-events: none;
+    }
+
+    /* ============ VELOCIDADE ============ */
+    .vel-label {
+        font-size: 0.7rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+        font-variant-numeric: tabular-nums;
+    }
+
+    #btnVelocidade.ativo {
+        background: rgba(100,255,218,0.12);
+        color: var(--cor-destaque);
+        opacity: 1;
+    }
+
+    .vel-display {
+        display: flex;
+        justify-content: center;
+        margin: 4px 0 16px;
+    }
+    .vel-valor {
+        font-size: 2.4rem;
+        font-weight: 900;
+        color: var(--cor-destaque);
+        letter-spacing: -0.03em;
+        font-variant-numeric: tabular-nums;
+        text-shadow: 0 0 24px rgba(100,255,218,0.35);
+    }
+
+    .vel-slider {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 100%;
+        height: 6px;
+        border-radius: 3px;
+        background: rgba(255,255,255,0.1);
+        outline: none;
+        margin-bottom: 8px;
+        cursor: pointer;
+    }
+    .vel-slider::-webkit-slider-thumb {
+        -webkit-appearance: none;
+        appearance: none;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--cor-destaque);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.4), 0 0 14px rgba(100,255,218,0.4);
+        cursor: pointer;
+    }
+    .vel-slider::-moz-range-thumb {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: #fff;
+        border: 3px solid var(--cor-destaque);
+        box-shadow: 0 2px 10px rgba(0,0,0,0.4), 0 0 14px rgba(100,255,218,0.4);
+        cursor: pointer;
+    }
+
+    .vel-minmax {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.68rem;
+        opacity: 0.45;
+        letter-spacing: 0.05em;
+        margin-bottom: 20px;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .vel-atalhos {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        margin-bottom: 4px;
+    }
+    .vel-atalho {
+        flex: 1;
+        min-width: 60px;
+        padding: 10px 8px;
+        border-radius: 100px;
+        background: rgba(255,255,255,0.06);
+        color: var(--cor-texto);
+        border: none;
+        font-size: 0.8rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-variant-numeric: tabular-nums;
+    }
+    .vel-atalho:hover { background: rgba(255,255,255,0.14); }
+    .vel-atalho.ativo {
+        background: var(--cor-destaque);
+        color: #0a192f;
     }
 
     /* ============ CONTROLES ============ */
@@ -588,14 +1211,12 @@
 
     /* ============ PAINEL LATERAL DA FILA ============ */
     .fila-overlay {
-        position: fixed;
-        inset: 0;
+        position: fixed; inset: 0;
         background: rgba(0,0,0,0.5);
         backdrop-filter: blur(3px);
         -webkit-backdrop-filter: blur(3px);
         z-index: 55;
-        opacity: 0;
-        visibility: hidden;
+        opacity: 0; visibility: hidden;
         transition: opacity 0.25s, visibility 0.25s;
     }
     .fila-overlay.aberto { opacity: 1; visibility: visible; }
@@ -609,8 +1230,7 @@
         -webkit-backdrop-filter: blur(20px);
         border-left: 1px solid rgba(255,255,255,0.1);
         z-index: 56;
-        display: flex;
-        flex-direction: column;
+        display: flex; flex-direction: column;
         transform: translateX(100%);
         transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
         box-shadow: -20px 0 60px rgba(0,0,0,0.5);
@@ -620,115 +1240,138 @@
     .fila-painel.aberto { transform: translateX(0); }
 
     .fila-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+        display: flex; justify-content: space-between; align-items: center;
         padding: 20px 20px 14px;
         border-bottom: 1px solid rgba(255,255,255,0.08);
         flex-shrink: 0;
     }
     .fila-titulo {
-        font-size: 1.05rem;
-        font-weight: 800;
-        letter-spacing: -0.01em;
-        color: var(--cor-texto);
+        font-size: 1.05rem; font-weight: 800;
+        letter-spacing: -0.01em; color: var(--cor-texto);
     }
     .fila-btn-fechar {
-        width: 36px; height: 36px;
-        border-radius: 50%;
-        background: transparent;
-        border: none;
-        color: var(--cor-texto);
-        font-size: 16px;
-        cursor: pointer;
+        width: 36px; height: 36px; border-radius: 50%;
+        background: transparent; border: none;
+        color: var(--cor-texto); font-size: 16px; cursor: pointer;
         display: flex; align-items: center; justify-content: center;
         opacity: 0.7;
     }
     .fila-btn-fechar:hover { opacity: 1; background: rgba(255,255,255,0.08); }
 
     .fila-lista {
-        flex: 1;
-        overflow-y: auto;
+        flex: 1; overflow-y: auto;
         padding: 8px 10px 20px;
         -webkit-overflow-scrolling: touch;
     }
 
     .fila-item {
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        cursor: pointer;
-        transition: background 0.15s;
+        display: flex; align-items: center; gap: 12px;
+        padding: 10px 12px; border-radius: 10px;
+        cursor: pointer; transition: background 0.15s;
         position: relative;
     }
     .fila-item:hover { background: rgba(255,255,255,0.05); }
-
-    .fila-item-ativa {
-        background: rgba(100,255,218,0.1) !important;
-    }
+    .fila-item-ativa { background: rgba(100,255,218,0.1) !important; }
     .fila-item-ativa .fila-item-titulo { color: var(--cor-destaque); }
 
     .fila-item-numero {
-        width: 22px;
-        flex-shrink: 0;
-        text-align: center;
-        font-size: 0.75rem;
-        font-variant-numeric: tabular-nums;
-        opacity: 0.4;
-        font-weight: 600;
+        width: 22px; flex-shrink: 0; text-align: center;
+        font-size: 0.75rem; font-variant-numeric: tabular-nums;
+        opacity: 0.4; font-weight: 600;
     }
     .fila-item-ativa .fila-item-numero {
-        color: var(--cor-destaque);
-        opacity: 1;
+        color: var(--cor-destaque); opacity: 1;
     }
 
     .fila-item-capa {
-        width: 40px; height: 40px;
-        border-radius: 6px;
-        flex-shrink: 0;
-        background-size: cover;
+        width: 40px; height: 40px; border-radius: 6px;
+        flex-shrink: 0; background-size: cover;
         background-position: center;
         background-color: rgba(255,255,255,0.06);
         display: flex; align-items: center; justify-content: center;
-        color: var(--cor-destaque);
-        font-size: 14px;
+        color: var(--cor-destaque); font-size: 14px;
         overflow: hidden;
     }
 
     .fila-item-meta { flex: 1; min-width: 0; }
     .fila-item-titulo {
-        font-size: 0.85rem;
-        font-weight: 600;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 0.85rem; font-weight: 600;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         color: var(--cor-texto);
     }
     .fila-item-artista {
-        font-size: 0.7rem;
-        opacity: 0.5;
-        margin-top: 1px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        font-size: 0.7rem; opacity: 0.5; margin-top: 1px;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         color: var(--cor-texto);
     }
 
     .fila-vazia {
-        text-align: center;
-        padding: 60px 20px;
-        opacity: 0.4;
+        text-align: center; padding: 60px 20px; opacity: 0.4;
     }
     .fila-vazia i { font-size: 2.5rem; margin-bottom: 12px; display: block; }
     .fila-vazia p { font-size: 0.85rem; }
 
     body.fila-aberta .controles,
     body.fila-aberta .hint-swipe {
-        opacity: 0.3;
-        pointer-events: none;
+        opacity: 0.3; pointer-events: none;
     }
+
+    /* ============ SLEEP TIMER ============ */
+    .sleep-badge {
+        position: absolute; top: 50%; left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.55rem; font-weight: 800;
+        letter-spacing: 0.02em;
+        color: var(--cor-destaque);
+        background: transparent;
+        pointer-events: none; display: none;
+        font-variant-numeric: tabular-nums;
+    }
+    #btnSleepTimer.ativo {
+        background: rgba(100,255,218,0.12);
+        color: var(--cor-destaque);
+        opacity: 1;
+    }
+    #btnSleepTimer.ativo .sleep-badge { display: block; }
+    #btnSleepTimer.ativo i { opacity: 0.35; }
+
+    .toast-aviso {
+        position: fixed; left: 50%; bottom: 90px;
+        transform: translateX(-50%) translateY(20px);
+        background: rgba(0,0,0,0.9);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255,255,255,0.12);
+        color: var(--cor-texto);
+        padding: 10px 18px; border-radius: 100px;
+        font-size: 0.85rem; font-weight: 600;
+        z-index: 200; opacity: 0; pointer-events: none;
+        transition: opacity 0.3s, transform 0.3s;
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 90vw;
+    }
+    .toast-aviso.visivel {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+        pointer-events: auto;
+    }
+    .toast-aviso .toast-btn-acao {
+        background: var(--cor-destaque);
+        color: #0a192f;
+        border: none;
+        font-size: 0.75rem;
+        font-weight: 800;
+        letter-spacing: 0.05em;
+        padding: 6px 14px;
+        border-radius: 100px;
+        cursor: pointer;
+        text-transform: uppercase;
+        flex-shrink: 0;
+        font-family: inherit;
+    }
+    .toast-aviso .toast-btn-acao:hover { transform: scale(1.05); }
 
     /* ============ MODAL GENÉRICO ============ */
     .modal-overlay {
@@ -776,7 +1419,7 @@
         backdrop-filter: blur(18px);
         border: 1px solid rgba(255,255,255,0.12);
         border-radius: 16px; padding: 12px 16px;
-        display: flex; align-items: center; gap: 12px;
+        display: flex; align-items: center; gap: 10px;
         z-index: 35; transform: translateY(140%);
         transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
     }
@@ -791,6 +1434,13 @@
     .barra-selecao-btn.secundario {
         background: rgba(255,255,255,0.1); color: var(--cor-texto);
     }
+    .barra-selecao-btn.perigo {
+        background: rgba(255,77,109,0.15);
+        color: var(--cor-fav);
+        padding: 9px 14px;
+    }
+    .barra-selecao-btn.perigo:hover { background: rgba(255,77,109,0.3); }
+
     .musica-item.selecionada { background: rgba(100,255,218,0.1) !important; }
     .musica-item.selecionada::after {
         content: '\f00c'; font-family: 'FontAwesome';
@@ -852,6 +1502,287 @@
         font-variant-numeric: tabular-nums;
     }
 
+    /* ============ LIXEIRA ============ */
+    .removidas-topo {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 4px 12px 12px;
+    }
+
+    .removidas-info {
+        font-size: 0.78rem;
+        opacity: 0.55;
+    }
+
+    .removidas-btn-restaurar-todas {
+        padding: 8px 14px;
+        border-radius: 100px;
+        background: var(--cor-destaque);
+        color: #0a192f;
+        border: none;
+        font-size: 0.78rem;
+        font-weight: 700;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: transform 0.15s;
+    }
+    .removidas-btn-restaurar-todas:active { transform: scale(0.96); }
+
+    .musica-item.removida .musica-titulo,
+    .musica-item.removida .musica-info,
+    .musica-item.removida .musica-capa {
+        opacity: 0.5;
+    }
+
+    .musica-item.removida .musica-titulo {
+        text-decoration: line-through;
+        text-decoration-color: rgba(204,214,246,0.4);
+    }
+
+    .musica-btn-restaurar {
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        background: rgba(100,255,218,0.12);
+        border: none;
+        color: var(--cor-destaque);
+        font-size: 15px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        transition: background 0.2s, transform 0.15s;
+    }
+    .musica-btn-restaurar:hover { background: rgba(100,255,218,0.22); }
+    .musica-btn-restaurar:active { transform: scale(0.9); }
+
+    /* ============ ESTATÍSTICAS ============ */
+    #telaEstatisticas {
+        padding: env(safe-area-inset-top, 0) 0 0;
+        overflow: hidden;
+    }
+
+    .stats-conteudo {
+        flex: 1;
+        overflow-y: auto;
+        padding: 8px 20px 40px;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .stats-cartoes {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+        margin-bottom: 22px;
+    }
+    .stats-cartao {
+        padding: 16px;
+        border-radius: 16px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.06);
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .stats-cartao.destaque {
+        grid-column: 1 / -1;
+        background: linear-gradient(135deg, rgba(100,255,218,0.15) 0%, rgba(100,255,218,0.04) 100%);
+        border-color: rgba(100,255,218,0.25);
+    }
+    .stats-cartao-icone {
+        font-size: 1rem;
+        color: var(--cor-destaque);
+        opacity: 0.9;
+        margin-bottom: 4px;
+    }
+    .stats-cartao-valor {
+        font-size: 1.55rem;
+        font-weight: 900;
+        letter-spacing: -0.02em;
+        color: var(--cor-texto);
+        font-variant-numeric: tabular-nums;
+        line-height: 1.1;
+    }
+    .stats-cartao.destaque .stats-cartao-valor {
+        font-size: 2.1rem;
+        color: var(--cor-destaque);
+        text-shadow: 0 0 24px rgba(100,255,218,0.3);
+    }
+    .stats-cartao-label {
+        font-size: 0.7rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        opacity: 0.55;
+        font-weight: 600;
+    }
+
+    .stats-secao {
+        margin-bottom: 26px;
+    }
+    .stats-secao-titulo {
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.15em;
+        text-transform: uppercase;
+        opacity: 0.5;
+        margin-bottom: 12px;
+    }
+
+    .stats-grafico {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+        height: 110px;
+        padding: 10px 0;
+        gap: 6px;
+    }
+    .stats-grafico-col {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: flex-end;
+        height: 100%;
+        gap: 6px;
+    }
+    .stats-grafico-barra {
+        width: 100%;
+        max-width: 28px;
+        border-radius: 6px 6px 3px 3px;
+        background: linear-gradient(to top, var(--cor-destaque), rgba(100,255,218,0.4));
+        min-height: 4px;
+        transition: height 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: 0 0 12px rgba(100,255,218,0.25);
+    }
+    .stats-grafico-barra.vazia {
+        background: rgba(255,255,255,0.06);
+        box-shadow: none;
+    }
+    .stats-grafico-dia {
+        font-size: 0.6rem;
+        text-transform: uppercase;
+        opacity: 0.5;
+        letter-spacing: 0.05em;
+        font-weight: 600;
+    }
+    .stats-grafico-min {
+        font-size: 0.58rem;
+        opacity: 0.4;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stats-top {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .stats-top-item {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        transition: background 0.15s;
+        cursor: pointer;
+    }
+    .stats-top-item:hover { background: rgba(255,255,255,0.04); }
+    .stats-top-pos {
+        width: 22px;
+        text-align: center;
+        font-size: 0.9rem;
+        font-weight: 900;
+        color: var(--cor-destaque);
+        opacity: 0.85;
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+    }
+    .stats-top-capa {
+        width: 40px;
+        height: 40px;
+        border-radius: 6px;
+        background-size: cover;
+        background-position: center;
+        background-color: rgba(255,255,255,0.06);
+        display: flex; align-items: center; justify-content: center;
+        color: var(--cor-destaque);
+        font-size: 14px;
+        flex-shrink: 0;
+        overflow: hidden;
+    }
+    .stats-top-meta {
+        flex: 1;
+        min-width: 0;
+    }
+    .stats-top-titulo {
+        font-size: 0.85rem;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .stats-top-artista {
+        font-size: 0.7rem;
+        opacity: 0.55;
+        margin-top: 1px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .stats-top-contagem {
+        font-size: 0.72rem;
+        font-weight: 700;
+        color: var(--cor-destaque);
+        background: rgba(100,255,218,0.12);
+        padding: 4px 10px;
+        border-radius: 100px;
+        flex-shrink: 0;
+        font-variant-numeric: tabular-nums;
+    }
+
+    .stats-historico {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .stats-hist-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        border-radius: 10px;
+        font-size: 0.82rem;
+    }
+    .stats-hist-item:hover { background: rgba(255,255,255,0.04); }
+    .stats-hist-hora {
+        font-size: 0.68rem;
+        opacity: 0.45;
+        letter-spacing: 0.02em;
+        font-variant-numeric: tabular-nums;
+        flex-shrink: 0;
+        min-width: 52px;
+    }
+    .stats-hist-titulo {
+        flex: 1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        color: var(--cor-texto);
+        opacity: 0.85;
+    }
+
+    .stats-vazio {
+        text-align: center;
+        padding: 60px 20px;
+        opacity: 0.4;
+    }
+    .stats-vazio i { font-size: 3rem; margin-bottom: 14px; display: block; }
+    .stats-vazio p { font-size: 0.9rem; }
+
     .escondido { display: none !important; }
 
     @media (max-height: 640px) {
@@ -889,11 +1820,17 @@
     <div class="bib-header">
         <h1 class="bib-titulo">Música</h1>
         <div class="bib-header-acoes">
-    <button class="bib-btn-header" id="btnBusca" title="Pesquisar"><i class="fa fa-search"></i></button>
-    <button class="bib-btn-header" id="btnAdicionarMais" title="Adicionar músicas">
-        <i class="fa fa-plus"></i>
-    </button>
-    <button class="bib-btn-header" id="btnTema" title="Tema"><i class="fa fa-paint-brush"></i></button>
+            <button class="bib-btn-header" id="btnBusca" title="Pesquisar"><i class="fa fa-search"></i></button>
+            <button class="bib-btn-header" id="btnAdicionarMais" title="Adicionar músicas">
+                <i class="fa fa-plus"></i>
+            </button>
+            <button class="bib-btn-header" id="btnBackup" title="Backup">
+                <i class="fa fa-cloud"></i>
+            </button>
+            <button class="bib-btn-header" id="btnEstatisticas" title="Estatísticas">
+                <i class="fa fa-bar-chart"></i>
+            </button>
+            <button class="bib-btn-header" id="btnTema" title="Tema"><i class="fa fa-paint-brush"></i></button>
         </div>
     </div>
     <div class="busca-wrap" id="buscaWrap">
@@ -904,6 +1841,7 @@
         <button class="bib-aba" data-aba="lista">Lista de reprodução</button>
         <button class="bib-aba" data-aba="pastas">Pastas</button>
         <button class="bib-aba" data-aba="recentes">Recentes</button>
+        <button class="bib-aba escondido" data-aba="removidas" id="abaRemovidas">Removidas</button>
     </div>
     <div class="bib-conteudo" id="bibConteudo"></div>
 
@@ -913,6 +1851,7 @@
             <div class="mini-titulo" id="miniTitulo">—</div>
             <div class="mini-artista" id="miniArtista">—</div>
         </div>
+        <button class="mini-btn-fav" id="miniBtnFav" title="Favorito"><i class="fa fa-heart-o"></i></button>
         <button class="mini-btn" id="miniBtnPlayPause"><i class="fa fa-pause"></i></button>
         <div class="mini-barra"><div class="mini-barra-fill" id="miniBarraFill"></div></div>
     </div>
@@ -922,15 +1861,35 @@
     <div class="player-topbar">
         <button class="player-btn-voltar" id="btnVoltarBiblioteca"><i class="fa fa-chevron-down"></i></button>
         <span class="player-topbar-titulo" id="playerContador">— / —</span>
-        <button class="player-btn-voltar" id="btnMenuFila" title="Fila de reprodução">
-            <i class="fa fa-list-ul"></i>
-        </button>
+        <div style="display:flex;gap:4px">
+            <button class="player-btn-voltar" id="btnLetras" title="Letra">
+                <i class="fa fa-align-left"></i>
+            </button>
+            <button class="player-btn-voltar" id="btnEQ" title="Equalizador">
+                <i class="fa fa-sliders"></i>
+            </button>
+            <button class="player-btn-voltar" id="btnVelocidade" title="Velocidade">
+                <span class="vel-label" id="velLabel">1×</span>
+            </button>
+            <button class="player-btn-voltar" id="btnSleepTimer" title="Temporizador">
+                <i class="fa fa-moon-o"></i>
+                <span class="sleep-badge" id="sleepBadge"></span>
+            </button>
+            <button class="player-btn-voltar" id="btnMenuFila" title="Fila de reprodução">
+                <i class="fa fa-list-ul"></i>
+            </button>
+        </div>
     </div>
     <div class="centro-player">
         <div class="cartao-wrap">
             <div class="cartao" id="cartao">
                 <div class="cartao-capa sem-capa" id="cartaoCapa"></div>
                 <div class="cartao-gradiente"></div>
+
+                <button class="cartao-fav" id="btnFavPlayer" title="Favorito">
+                    <i class="fa fa-heart-o"></i>
+                </button>
+
                 <div class="cartao-info">
                     <div class="cartao-titulo" id="tituloAtual"></div>
                     <div class="cartao-artista" id="artistaAtual">—</div>
@@ -966,7 +1925,17 @@
     <div class="temas-grid" id="gridModelos"></div>
 </div>
 
-<!-- Painel lateral da fila -->
+<div id="telaEstatisticas" class="tela inativa-direita">
+    <div class="temas-header">
+        <button class="temas-btn-voltar" id="btnVoltarEstatisticas"><i class="fa fa-chevron-left"></i></button>
+        <h1 class="temas-titulo">Estatísticas</h1>
+    </div>
+
+    <div class="stats-conteudo" id="statsConteudo">
+        <!-- Preenchido dinamicamente -->
+    </div>
+</div>
+
 <div class="fila-overlay" id="filaOverlay"></div>
 <aside class="fila-painel" id="filaPainel">
     <div class="fila-header">
@@ -976,9 +1945,37 @@
     <div class="fila-lista" id="filaLista"></div>
 </aside>
 
+<div class="letras-overlay" id="letrasOverlay"></div>
+<section class="letras-painel" id="letrasPainel">
+    <div class="letras-header">
+        <h2 class="letras-titulo">Letra</h2>
+        <button class="letras-btn-fechar" id="btnFecharLetras"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="letras-conteudo" id="letrasConteudo"></div>
+    <div class="letras-acoes" id="letrasAcoes" style="display:none">
+        <button class="letras-btn" id="btnEditarLetra"><i class="fa fa-pencil"></i> Editar letra</button>
+    </div>
+</section>
+
+<div class="eq-overlay" id="eqOverlay"></div>
+<section class="eq-painel" id="eqPainel">
+    <div class="eq-header">
+        <h2 class="eq-titulo">Equalizador</h2>
+        <button class="eq-btn-fechar" id="btnFecharEQ"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="eq-presets" id="eqPresets"></div>
+    <div class="eq-sliders" id="eqSliders"></div>
+    <div class="eq-acoes">
+        <button class="eq-btn-reset" id="btnEQReset">
+            <i class="fa fa-refresh"></i> Repor
+        </button>
+    </div>
+</section>
+
 <div class="barra-selecao" id="barraSelecao">
     <span class="barra-selecao-info" id="selecaoInfo">0 selecionadas</span>
     <button class="barra-selecao-btn secundario" id="btnCancelarSelecao">Cancelar</button>
+    <button class="barra-selecao-btn perigo" id="btnRemoverSelecao" title="Remover"><i class="fa fa-trash"></i></button>
     <button class="barra-selecao-btn" id="btnAdicionarLista"><i class="fa fa-plus mr-1"></i> Lista</button>
 </div>
 
@@ -1019,6 +2016,13 @@
                 <div id="menuAdicionarListaTexto">Adicionar à Lista de reprodução</div>
             </div>
         </button>
+        <button class="modal-acao" id="menuEnviarMusica">
+            <i class="fa fa-share-alt"></i>
+            <div class="modal-acao-texto">
+                <div>Enviar música</div>
+                <div class="modal-acao-sub">Partilhar com apps do dispositivo</div>
+            </div>
+        </button>
         <button class="modal-acao" id="menuSelecionarMultiplos">
             <i class="fa fa-check-square-o"></i>
             <div class="modal-acao-texto">
@@ -1026,7 +2030,165 @@
                 <div class="modal-acao-sub">Marque várias músicas para adicionar à lista</div>
             </div>
         </button>
+        <button class="modal-acao" id="menuEditarMeta">
+            <i class="fa fa-pencil"></i>
+            <div class="modal-acao-texto">
+                <div>Editar metadados</div>
+                <div class="modal-acao-sub">Título, artista e capa</div>
+            </div>
+        </button>
+        <button class="modal-acao" id="menuRemoverMusica">
+            <i class="fa fa-trash" style="background: rgba(255,77,109,0.15); color: #ff4d6d;"></i>
+            <div class="modal-acao-texto">
+                <div style="color: #ff4d6d;">Remover da biblioteca</div>
+                <div class="modal-acao-sub">O ficheiro original não é apagado</div>
+            </div>
+        </button>
         <button class="modal-acao" id="btnFecharMenuMusica">
+            <i class="fa fa-times"></i>
+            <div class="modal-acao-texto">Fechar</div>
+        </button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalSleep">
+    <div class="modal-sheet">
+        <div class="modal-titulo">Temporizador</div>
+        <div class="modal-sub" id="sleepInfo">A reprodução irá parar automaticamente.</div>
+
+        <button class="modal-acao" data-sleep="15">
+            <i class="fa fa-clock-o"></i>
+            <div class="modal-acao-texto"><div>15 minutos</div></div>
+        </button>
+        <button class="modal-acao" data-sleep="30">
+            <i class="fa fa-clock-o"></i>
+            <div class="modal-acao-texto"><div>30 minutos</div></div>
+        </button>
+        <button class="modal-acao" data-sleep="45">
+            <i class="fa fa-clock-o"></i>
+            <div class="modal-acao-texto"><div>45 minutos</div></div>
+        </button>
+        <button class="modal-acao" data-sleep="60">
+            <i class="fa fa-clock-o"></i>
+            <div class="modal-acao-texto"><div>60 minutos</div></div>
+        </button>
+        <button class="modal-acao" data-sleep="fim">
+            <i class="fa fa-step-forward"></i>
+            <div class="modal-acao-texto">
+                <div>Fim da faixa atual</div>
+                <div class="modal-acao-sub">Pausa quando esta música terminar</div>
+            </div>
+        </button>
+        <button class="modal-acao escondido" id="btnDesligarSleep" data-sleep="off">
+            <i class="fa fa-times-circle"></i>
+            <div class="modal-acao-texto"><div>Desligar temporizador</div></div>
+        </button>
+        <button class="modal-acao" id="btnFecharSleep">
+            <i class="fa fa-times"></i>
+            <div class="modal-acao-texto">Fechar</div>
+        </button>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditarMeta">
+    <div class="modal-sheet">
+        <div class="modal-titulo">Editar metadados</div>
+        <div class="modal-sub">As alterações aplicam-se apenas ao leitor.</div>
+
+        <div class="edit-meta-capa-wrap">
+            <div class="edit-meta-capa" id="editCapaPreview">
+                <i class="fa fa-music"></i>
+            </div>
+            <button class="edit-meta-capa-btn" id="btnEscolherCapa">
+                <i class="fa fa-image"></i> Escolher capa
+            </button>
+            <button class="edit-meta-capa-btn-remover" id="btnRemoverCapa" title="Remover capa">
+                <i class="fa fa-times"></i>
+            </button>
+        </div>
+
+        <label class="edit-meta-label">Título</label>
+        <input type="text" class="edit-meta-input" id="editTitulo" placeholder="Nome da música">
+
+        <label class="edit-meta-label">Artista</label>
+        <input type="text" class="edit-meta-input" id="editArtista" placeholder="Artista">
+
+        <div class="edit-meta-acoes">
+            <button class="edit-meta-btn secundario" id="btnCancelarMeta">Cancelar</button>
+            <button class="edit-meta-btn primario" id="btnGuardarMeta">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalEditarLetra">
+    <div class="modal-sheet">
+        <div class="modal-titulo">Editar letra</div>
+        <div class="modal-sub">Formato .lrc (ex: [00:12.50] texto) ou texto simples.</div>
+        <textarea class="letras-textarea" id="inputLetra" placeholder="[00:12.50] Primeira linha&#10;[00:15.30] Segunda linha"></textarea>
+        <div class="edit-meta-acoes">
+            <button class="edit-meta-btn secundario" id="btnCancelarLetra">Cancelar</button>
+            <button class="edit-meta-btn primario" id="btnGuardarLetra">Guardar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalVelocidade">
+    <div class="modal-sheet">
+        <div class="modal-titulo">Velocidade de reprodução</div>
+        <div class="modal-sub">Afeta todas as músicas. O tom mantém-se.</div>
+
+        <div class="vel-display">
+            <span class="vel-valor" id="velValor">1.00×</span>
+        </div>
+
+        <input type="range" class="vel-slider" id="velSlider"
+               min="0.5" max="2.0" step="0.05" value="1.0">
+
+        <div class="vel-minmax">
+            <span>0.5×</span>
+            <span>1×</span>
+            <span>2×</span>
+        </div>
+
+        <div class="vel-atalhos">
+            <button class="vel-atalho" data-vel="0.5">0.5×</button>
+            <button class="vel-atalho" data-vel="0.75">0.75×</button>
+            <button class="vel-atalho" data-vel="1">1×</button>
+            <button class="vel-atalho" data-vel="1.25">1.25×</button>
+            <button class="vel-atalho" data-vel="1.5">1.5×</button>
+            <button class="vel-atalho" data-vel="2">2×</button>
+        </div>
+
+        <div class="edit-meta-acoes">
+            <button class="edit-meta-btn primario" id="btnFecharVel">Fechar</button>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalBackup">
+    <div class="modal-sheet">
+        <div class="modal-titulo">Backup</div>
+        <div class="modal-sub">Guarda favoritos, metadados editados, capas manuais e letras.</div>
+
+        <button class="modal-acao" id="opcaoExportar">
+            <i class="fa fa-download"></i>
+            <div class="modal-acao-texto">
+                <div>Exportar backup</div>
+                <div class="modal-acao-sub">Descarrega um ficheiro .json com os seus dados</div>
+            </div>
+            <i class="fa fa-chevron-right" style="background:transparent; color:inherit; width:auto; height:auto;"></i>
+        </button>
+
+        <button class="modal-acao" id="opcaoImportar">
+            <i class="fa fa-upload"></i>
+            <div class="modal-acao-texto">
+                <div>Importar backup</div>
+                <div class="modal-acao-sub">Funde com os dados atuais (não apaga nada)</div>
+            </div>
+            <i class="fa fa-chevron-right" style="background:transparent; color:inherit; width:auto; height:auto;"></i>
+        </button>
+
+        <button class="modal-acao" id="btnFecharBackup">
             <i class="fa fa-times"></i>
             <div class="modal-acao-texto">Fechar</div>
         </button>
@@ -1041,6 +2203,8 @@
 </div>
 
 <input type="file" id="inputPastaMusicas" accept="audio/*,.mp3,.wav,.ogg,.m4a" multiple webkitdirectory directory style="display:none">
+<input type="file" id="inputCapaManual" accept="image/*" style="display:none">
+<input type="file" id="inputBackup" accept="application/json,.json" style="display:none">
 
 <script>
 /* ============ REFERÊNCIAS ============ */
@@ -1049,15 +2213,21 @@ const telaBoasVindas   = document.getElementById('telaBoasVindas');
 const telaBiblioteca   = document.getElementById('telaBiblioteca');
 const telaPlayer       = document.getElementById('telaPlayer');
 const telaTemas        = document.getElementById('telaTemas');
+const telaEstatisticas = document.getElementById('telaEstatisticas');
 const btnAcessar       = document.getElementById('btnAcessarFicheiros');
 const bibConteudo      = document.getElementById('bibConteudo');
 const bibAbas          = document.querySelectorAll('.bib-aba');
 const buscaWrap        = document.getElementById('buscaWrap');
 const buscaInput       = document.getElementById('buscaInput');
 const btnBusca         = document.getElementById('btnBusca');
+const btnAdicionarMais = document.getElementById('btnAdicionarMais');
+const btnBackup        = document.getElementById('btnBackup');
+const btnEstatisticas  = document.getElementById('btnEstatisticas');
 const btnTema          = document.getElementById('btnTema');
 const btnVoltarBib     = document.getElementById('btnVoltarBiblioteca');
 const btnVoltarTemas   = document.getElementById('btnVoltarTemas');
+const btnVoltarEstat   = document.getElementById('btnVoltarEstatisticas');
+const statsConteudo    = document.getElementById('statsConteudo');
 const gridCores        = document.getElementById('gridCores');
 const gridModelos      = document.getElementById('gridModelos');
 
@@ -1067,6 +2237,7 @@ const miniTitulo       = document.getElementById('miniTitulo');
 const miniArtista      = document.getElementById('miniArtista');
 const miniBtnPlayPause = document.getElementById('miniBtnPlayPause');
 const miniBarraFill    = document.getElementById('miniBarraFill');
+const miniBtnFav       = document.getElementById('miniBtnFav');
 
 const barraSelecao     = document.getElementById('barraSelecao');
 const selecaoInfo      = document.getElementById('selecaoInfo');
@@ -1083,6 +2254,7 @@ const menuMusicaTitulo = document.getElementById('menuMusicaTitulo');
 const menuMusicaArtista= document.getElementById('menuMusicaArtista');
 const menuAdicionarLista = document.getElementById('menuAdicionarLista');
 const menuAddListaTexto  = document.getElementById('menuAdicionarListaTexto');
+const menuEnviarMusica   = document.getElementById('menuEnviarMusica');
 const menuSelecionarMulti= document.getElementById('menuSelecionarMultiplos');
 const btnFecharMenu    = document.getElementById('btnFecharMenuMusica');
 
@@ -1107,12 +2279,63 @@ const volumeSliderFill = document.getElementById('volumeSliderFill');
 const volumePorcentagem= document.getElementById('volumePorcentagem');
 const inputPasta       = document.getElementById('inputPastaMusicas');
 
-/* Fila lateral */
 const btnMenuFila   = document.getElementById('btnMenuFila');
 const filaPainel    = document.getElementById('filaPainel');
 const filaOverlay   = document.getElementById('filaOverlay');
 const filaLista     = document.getElementById('filaLista');
 const btnFecharFila = document.getElementById('btnFecharFila');
+
+const btnSleepTimer  = document.getElementById('btnSleepTimer');
+const sleepBadge     = document.getElementById('sleepBadge');
+const modalSleep     = document.getElementById('modalSleep');
+const sleepInfo      = document.getElementById('sleepInfo');
+const btnFecharSleep = document.getElementById('btnFecharSleep');
+const btnDesligarSleep = document.getElementById('btnDesligarSleep');
+
+const btnFavPlayer   = document.getElementById('btnFavPlayer');
+
+const btnLetras         = document.getElementById('btnLetras');
+const letrasOverlay     = document.getElementById('letrasOverlay');
+const letrasPainel      = document.getElementById('letrasPainel');
+const letrasConteudo    = document.getElementById('letrasConteudo');
+const letrasAcoes       = document.getElementById('letrasAcoes');
+const btnFecharLetras   = document.getElementById('btnFecharLetras');
+const btnEditarLetra    = document.getElementById('btnEditarLetra');
+const modalEditarLetra  = document.getElementById('modalEditarLetra');
+const inputLetra        = document.getElementById('inputLetra');
+const btnCancelarLetra  = document.getElementById('btnCancelarLetra');
+const btnGuardarLetra   = document.getElementById('btnGuardarLetra');
+
+const btnEQ             = document.getElementById('btnEQ');
+const eqOverlay         = document.getElementById('eqOverlay');
+const eqPainel          = document.getElementById('eqPainel');
+const eqPresets         = document.getElementById('eqPresets');
+const eqSliders         = document.getElementById('eqSliders');
+const btnFecharEQ       = document.getElementById('btnFecharEQ');
+const btnEQReset        = document.getElementById('btnEQReset');
+
+const btnVelocidade     = document.getElementById('btnVelocidade');
+const velLabel          = document.getElementById('velLabel');
+const modalVelocidade   = document.getElementById('modalVelocidade');
+const velValor          = document.getElementById('velValor');
+const velSlider         = document.getElementById('velSlider');
+const btnFecharVel      = document.getElementById('btnFecharVel');
+
+const modalBackup     = document.getElementById('modalBackup');
+const opcaoExportar   = document.getElementById('opcaoExportar');
+const opcaoImportar   = document.getElementById('opcaoImportar');
+const btnFecharBackup = document.getElementById('btnFecharBackup');
+const inputBackup     = document.getElementById('inputBackup');
+
+const modalEditarMeta   = document.getElementById('modalEditarMeta');
+const editCapaPreview   = document.getElementById('editCapaPreview');
+const btnEscolherCapa   = document.getElementById('btnEscolherCapa');
+const btnRemoverCapa    = document.getElementById('btnRemoverCapa');
+const editTitulo        = document.getElementById('editTitulo');
+const editArtista       = document.getElementById('editArtista');
+const btnCancelarMeta   = document.getElementById('btnCancelarMeta');
+const btnGuardarMeta    = document.getElementById('btnGuardarMeta');
+const inputCapaManual   = document.getElementById('inputCapaManual');
 
 /* ============ ESTADO ============ */
 let musicas = [];
@@ -1137,6 +2360,27 @@ let aleatorioAtivo = false;
 let repetirAtivo = false;
 let temaCorAtivo = localStorage.getItem('temaSelecionado') || '1';
 let temaModeloAtivo = localStorage.getItem('modeloCartao') || 'classico';
+
+let sleepTimeoutId = null;
+let sleepIntervalId = null;
+let sleepFim = 0;
+let sleepModoFimFaixa = false;
+
+let musicaEditando = null;
+let capaTemporariaBlob = null;
+let capaTemporariaUrl  = null;
+let removerCapaFlag    = false;
+
+let musicasLrc = {};
+let letraLinhas = [];
+let linhaAtivaIdx = -1;
+let letraAtualSimples = null;
+
+let remocoesPendentes = null;
+
+let registosHistorico = [];
+let ultimoRegisto = null;
+let tocouMaisDe10s = false;
 
 /* ============ TEMAS ============ */
 const temas = {
@@ -1176,10 +2420,15 @@ function aplicarTema(id) {
         m.style.color = t.primario === '#ffffff' ? '#0f172a' : '#ccd6f6';
     });
 
-    // Painel da fila também segue o tema
     filaPainel.style.background = t.primario === '#ffffff'
         ? 'rgba(248,250,252,0.97)'
         : 'rgba(10,20,35,0.97)';
+    letrasPainel.style.background = t.primario === '#ffffff'
+        ? 'rgba(248,250,252,0.98)'
+        : 'rgba(10,20,35,0.98)';
+    eqPainel.style.background = t.primario === '#ffffff'
+        ? 'rgba(248,250,252,0.98)'
+        : 'rgba(10,20,35,0.98)';
 
     temaCorAtivo = id;
     localStorage.setItem('temaSelecionado', id);
@@ -1250,10 +2499,10 @@ function atualizarEstadoGridModelos() {
     });
 }
 
-/* ============ NAVEGAÇÃO DE TELAS ============ */
+/* ============ NAVEGAÇÃO ============ */
 function irParaTela(destino) {
-    const telas = [telaBoasVindas, telaBiblioteca, telaPlayer, telaTemas];
-    const indices = { boasVindas: 0, biblioteca: 1, player: 2, temas: 3 };
+    const telas = [telaBoasVindas, telaBiblioteca, telaPlayer, telaTemas, telaEstatisticas];
+    const indices = { boasVindas: 0, biblioteca: 1, player: 2, temas: 3, estatisticas: 4 };
     const alvo = indices[destino];
 
     telas.forEach((t, i) => {
@@ -1265,7 +2514,11 @@ function irParaTela(destino) {
     if (destino === 'player') miniPlayer.classList.remove('visivel');
     else if (destino === 'biblioteca' && indiceFila >= 0) miniPlayer.classList.add('visivel');
 
-    if (destino !== 'player') fecharFila();
+    if (destino !== 'player') {
+        fecharFila();
+        fecharLetras();
+        fecharEQ();
+    }
 
     telaAtual = destino;
 }
@@ -1273,13 +2526,18 @@ function irParaTela(destino) {
 /* ============ INDEXEDDB ============ */
 function abrirDB() {
     return new Promise((resolve, reject) => {
-        const req = indexedDB.open('LeitorMusicaDB', 2);
+        const req = indexedDB.open('LeitorMusicaDB', 3);
         req.onerror = () => reject(req.error);
         req.onsuccess = () => { db = req.result; resolve(db); };
         req.onupgradeneeded = e => {
             const d = e.target.result;
             if (!d.objectStoreNames.contains('musicas')) d.createObjectStore('musicas', { keyPath: 'id' });
             if (!d.objectStoreNames.contains('meta')) d.createObjectStore('meta', { keyPath: 'chave' });
+            if (!d.objectStoreNames.contains('historico')) {
+                const store = d.createObjectStore('historico', { keyPath: 'id', autoIncrement: true });
+                store.createIndex('musicaId', 'musicaId', { unique: false });
+                store.createIndex('timestamp', 'timestamp', { unique: false });
+            }
         };
     });
 }
@@ -1292,13 +2550,12 @@ function salvarMusicaDB(m) {
             id: m.id, nome: m.nome, artista: m.artista,
             arquivo: m.arquivo, pasta: m.pasta || ''
         };
-        // Só inclui capaBlob se já existir — evita apagar uma capa guardada
         if (m.capaBlob) dados.capaBlob = m.capaBlob;
         const req = tx.objectStore('musicas').put(dados);
         req.onsuccess = () => resolve();
         req.onerror = () => reject(req.error);
     });
-  }
+}
 
 function carregarMusicasDB() {
     return new Promise((resolve, reject) => {
@@ -1315,16 +2572,26 @@ function carregarMusicasDB() {
                 capa: null,
                 capaBlob: null
             };
-            // Se a capa já estava guardada, cria a URL imediatamente
+
+            if (item.nomeEditado) musica.nomeEditado = item.nomeEditado;
+            if (item.artistaEditado) musica.artistaEditado = item.artistaEditado;
             if (item.capaBlob) {
                 musica.capaBlob = item.capaBlob;
                 musica.capa = URL.createObjectURL(item.capaBlob);
             }
+            if (item.capaManualBlob) {
+                musica.capaManualBlob = item.capaManualBlob;
+                musica.capaManualUrl = URL.createObjectURL(item.capaManualBlob);
+            }
+            if (item.capaRemovida) musica.capaRemovida = true;
+            if (item.letraManual) musica.letraManual = item.letraManual;
+            if (item.removida) musica.removida = true;
+
             return musica;
         }));
         req.onerror = () => reject(req.error);
     });
-  }
+}
 
 function salvarMeta(chave, valor) {
     if (!db) return;
@@ -1355,12 +2622,15 @@ window.addEventListener('load', async () => {
 
     reprodutor.volume = 0.8;
     atualizarVolumeUI(0.8);
+    aplicarVelocidade();
 
     try {
         await abrirDB();
         const salvas = await carregarMusicasDB();
         listaReproducao = (await carregarMeta('lista')) || [];
         recentes = (await carregarMeta('recentes')) || [];
+        musicasLrc = (await carregarMeta('letras')) || {};
+        await carregarHistorico();
 
         if (salvas.length > 0) {
             musicas = salvas;
@@ -1369,6 +2639,9 @@ window.addEventListener('load', async () => {
             renderizarBiblioteca();
         }
     } catch (e) { console.error('Erro DB:', e); }
+
+    // Media Session: configura os handlers uma vez no arranque
+    configurarHandlersMediaSession();
 
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(() => {});
@@ -1379,8 +2652,7 @@ window.addEventListener('load', async () => {
 btnAcessar.addEventListener('click', () => modalPermissao.classList.add('aberto'));
 btnCancelarPerm.addEventListener('click', () => modalPermissao.classList.remove('aberto'));
 
-opcaoPastaNativa.addEventListener('click', async () => {
-    modalPermissao.classList.remove('aberto');
+async function abrirGestorPastas() {
     if ('showDirectoryPicker' in window) {
         try {
             const dirHandle = await window.showDirectoryPicker();
@@ -1392,6 +2664,11 @@ opcaoPastaNativa.addEventListener('click', async () => {
         }
     }
     inputPasta.click();
+}
+
+opcaoPastaNativa.addEventListener('click', () => {
+    modalPermissao.classList.remove('aberto');
+    abrirGestorPastas();
 });
 
 opcaoInputPasta.addEventListener('click', () => {
@@ -1399,9 +2676,13 @@ opcaoInputPasta.addEventListener('click', () => {
     inputPasta.click();
 });
 
+btnAdicionarMais.addEventListener('click', abrirGestorPastas);
+
 async function processarDiretorioFS(dirHandle) {
     const arquivos = [];
     await varrerDiretorio(dirHandle, '', arquivos);
+
+    let letrasAlteradas = false;
 
     for (const { arquivo, pasta } of arquivos) {
         if (!arquivo.type.startsWith('audio/') && !arquivo.name.endsWith('.m4a')) continue;
@@ -1411,11 +2692,23 @@ async function processarDiretorioFS(dirHandle) {
         const musica = {
             id, nome: arquivo.name.replace(/\.[^/.]+$/, ''),
             artista: 'Desconhecido', pasta: pasta || 'Raiz',
-            arquivo, url: URL.createObjectURL(arquivo), capa: null
+            arquivo, url: URL.createObjectURL(arquivo), capa: null, capaBlob: null
         };
         try { await salvarMusicaDB(musica); } catch (err) { console.warn('Quota', err); }
         musicas.push(musica);
     }
+
+    for (const { arquivo } of arquivos) {
+        if (!arquivo.name.toLowerCase().endsWith('.lrc')) continue;
+        const nomeBase = nomeBaseDoFicheiro(arquivo.name);
+        try {
+            const texto = await arquivo.text();
+            musicasLrc[nomeBase] = texto;
+            letrasAlteradas = true;
+        } catch (e) { /* ignora */ }
+    }
+    if (letrasAlteradas) salvarMeta('letras', musicasLrc);
+
     finalizarImportacao();
 }
 
@@ -1432,6 +2725,7 @@ async function varrerDiretorio(dirHandle, caminho, resultado) {
 
 inputPasta.addEventListener('change', async e => {
     const arquivos = Array.from(e.target.files);
+
     for (const arquivo of arquivos) {
         if (!arquivo.type.startsWith('audio/') && !arquivo.name.endsWith('.m4a')) continue;
         const id = gerarIdArquivo(arquivo);
@@ -1443,11 +2737,24 @@ inputPasta.addEventListener('change', async e => {
         const musica = {
             id, nome: arquivo.name.replace(/\.[^/.]+$/, ''),
             artista: 'Desconhecido', pasta,
-            arquivo, url: URL.createObjectURL(arquivo), capa: null
+            arquivo, url: URL.createObjectURL(arquivo), capa: null, capaBlob: null
         };
         try { await salvarMusicaDB(musica); } catch (err) { console.warn('Quota', err); }
         musicas.push(musica);
     }
+
+    let letrasAlteradas = false;
+    for (const arquivo of arquivos) {
+        if (!arquivo.name.toLowerCase().endsWith('.lrc')) continue;
+        const nomeBase = nomeBaseDoFicheiro(arquivo.name);
+        try {
+            const texto = await arquivo.text();
+            musicasLrc[nomeBase] = texto;
+            letrasAlteradas = true;
+        } catch (e) { /* ignora */ }
+    }
+    if (letrasAlteradas) salvarMeta('letras', musicasLrc);
+
     inputPasta.value = '';
     finalizarImportacao();
 });
@@ -1469,9 +2776,1321 @@ function reconstruirPastas() {
     });
 }
 
+/* ============ FILTRO: MÚSICAS ATIVAS ============ */
+function obterMusicasAtivas() {
+    return musicas.filter(m => !m.removida);
+}
+
+/* ============ METADADOS EFETIVOS ============ */
+function obterNomeEfetivo(m) {
+    return m.nomeEditado || m.nome;
+}
+
+function obterArtistaEfetivo(m) {
+    if (m.artistaEditado) return m.artistaEditado;
+    if (m.artista && m.artista !== 'Desconhecido') return m.artista;
+    return 'Artista desconhecido';
+}
+
+function obterCapaEfetiva(m) {
+    if (m.capaManualUrl) return m.capaManualUrl;
+    if (m.capaRemovida) return null;
+    return m.capa || null;
+}
+
+/* ============ LETRAS (.lrc) ============ */
+function nomeBaseDoFicheiro(nome) {
+    return nome.replace(/\.[^/.]+$/, '').toLowerCase();
+}
+
+function parseLRC(conteudo) {
+    const linhas = conteudo.split(/\r?\n/);
+    const resultado = [];
+    const regex = /\[(\d{2}):(\d{2})(?:\.(\d{2,3}))?\](.*)/;
+
+    for (const linha of linhas) {
+        const m = linha.match(regex);
+        if (m) {
+            const min = parseInt(m[1], 10);
+            const seg = parseInt(m[2], 10);
+            const cent = m[3] ? parseInt(m[3].padEnd(3, '0').slice(0, 3), 10) : 0;
+            const tempo = min * 60 + seg + cent / 1000;
+            const texto = m[4].trim();
+            if (texto) resultado.push({ tempo, texto });
+        }
+    }
+
+    resultado.sort((a, b) => a.tempo - b.tempo);
+    return resultado;
+}
+
+function temTimestamps(conteudo) {
+    return /\[\d{2}:\d{2}/.test(conteudo);
+}
+
+function carregarLetraDaMusica(musica) {
+    letraLinhas = [];
+    linhaAtivaIdx = -1;
+    letraAtualSimples = null;
+    letrasConteudo.innerHTML = '';
+    letrasAcoes.style.display = 'none';
+
+    if (musica.letraManual) {
+        aplicarConteudoLetra(musica.letraManual);
+        return;
+    }
+
+    const nomeBase = nomeBaseDoFicheiro(musica.nome);
+    const lrc = musicasLrc[nomeBase];
+    if (lrc) {
+        aplicarConteudoLetra(lrc);
+        return;
+    }
+
+    letrasConteudo.innerHTML = `
+        <div class="letras-vazio">
+            <i class="fa fa-align-left"></i>
+            <p>Sem letra disponível.<br>Podes adicionar uma manualmente.</p>
+        </div>
+    `;
+    letrasAcoes.style.display = 'flex';
+}
+
+function aplicarConteudoLetra(conteudo) {
+    if (temTimestamps(conteudo)) {
+        letraLinhas = parseLRC(conteudo);
+        if (letraLinhas.length === 0) {
+            letraAtualSimples = conteudo;
+            letrasConteudo.innerHTML = `<div class="letra-linha-simples">${escapeHtml(conteudo)}</div>`;
+            letrasAcoes.style.display = 'flex';
+            return;
+        }
+        letraLinhas.forEach((l, i) => {
+            const div = document.createElement('div');
+            div.className = 'letra-linha';
+            div.dataset.idx = i;
+            div.textContent = l.texto;
+            letrasConteudo.appendChild(div);
+        });
+        letrasAcoes.style.display = 'flex';
+        atualizarLinhaAtiva(true);
+    } else {
+        letraAtualSimples = conteudo;
+        letrasConteudo.innerHTML = `<div class="letra-linha-simples">${escapeHtml(conteudo)}</div>`;
+        letrasAcoes.style.display = 'flex';
+    }
+}
+
+function atualizarLinhaAtiva(forcar = false) {
+    if (!letraLinhas.length) return;
+    if (!letrasPainel.classList.contains('aberto') && !forcar) return;
+
+    const t = reprodutor.currentTime;
+    let idx = -1;
+    for (let i = 0; i < letraLinhas.length; i++) {
+        if (letraLinhas[i].tempo <= t) idx = i;
+        else break;
+    }
+
+    if (idx === linhaAtivaIdx) return;
+    linhaAtivaIdx = idx;
+
+    const linhas = letrasConteudo.querySelectorAll('.letra-linha');
+    linhas.forEach((el, i) => {
+        el.classList.remove('ativa', 'passada');
+        if (i === idx) el.classList.add('ativa');
+        else if (i < idx) el.classList.add('passada');
+    });
+
+    if (idx >= 0 && linhas[idx]) {
+        const alvo = linhas[idx];
+        const containerHeight = letrasConteudo.clientHeight;
+        const elTop = alvo.offsetTop;
+        const elHeight = alvo.offsetHeight;
+        const novoScroll = elTop - containerHeight / 2 + elHeight / 2;
+        letrasConteudo.scrollTo({ top: novoScroll, behavior: 'smooth' });
+    }
+}
+
+function abrirLetras() {
+    if (indiceFila < 0) return;
+    carregarLetraDaMusica(filaAtual[indiceFila]);
+    letrasPainel.classList.add('aberto');
+    letrasOverlay.classList.add('aberto');
+    document.body.classList.add('letras-aberta');
+    setTimeout(() => atualizarLinhaAtiva(true), 100);
+}
+
+function fecharLetras() {
+    letrasPainel.classList.remove('aberto');
+    letrasOverlay.classList.remove('aberto');
+    document.body.classList.remove('letras-aberta');
+}
+
+btnLetras.addEventListener('click', abrirLetras);
+btnFecharLetras.addEventListener('click', fecharLetras);
+letrasOverlay.addEventListener('click', fecharLetras);
+
+btnEditarLetra.addEventListener('click', () => {
+    if (indiceFila < 0) return;
+    const m = filaAtual[indiceFila];
+    inputLetra.value = m.letraManual || musicasLrc[nomeBaseDoFicheiro(m.nome)] || '';
+    modalEditarLetra.classList.add('aberto');
+    setTimeout(() => inputLetra.focus(), 300);
+});
+
+btnCancelarLetra.addEventListener('click', () => modalEditarLetra.classList.remove('aberto'));
+modalEditarLetra.addEventListener('click', e => {
+    if (e.target === modalEditarLetra) modalEditarLetra.classList.remove('aberto');
+});
+
+btnGuardarLetra.addEventListener('click', async () => {
+    if (indiceFila < 0) return;
+    const m = filaAtual[indiceFila];
+    const texto = inputLetra.value.trim();
+
+    if (texto) {
+        m.letraManual = texto;
+    } else {
+        delete m.letraManual;
+    }
+    await persistirLetraManual(m);
+    modalEditarLetra.classList.remove('aberto');
+
+    if (letrasPainel.classList.contains('aberto')) {
+        carregarLetraDaMusica(m);
+    }
+});
+
+async function persistirLetraManual(musica) {
+    if (!db) return;
+    return new Promise(resolve => {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (!dados) return resolve();
+                if (musica.letraManual) dados.letraManual = musica.letraManual;
+                else delete dados.letraManual;
+                store.put(dados);
+                resolve();
+            };
+            req.onerror = () => resolve();
+        } catch (e) {
+            console.warn('Erro a persistir letra:', e);
+            resolve();
+        }
+    });
+}
+
+/* ============ VELOCIDADE ============ */
+let velocidadeAtual = 1.0;
+
+try {
+    const guardada = parseFloat(localStorage.getItem('velocidade') || '1');
+    if (!isNaN(guardada) && guardada >= 0.5 && guardada <= 2.0) velocidadeAtual = guardada;
+} catch (e) { /* ignora */ }
+
+function aplicarVelocidade() {
+    reprodutor.playbackRate = velocidadeAtual;
+    if ('preservesPitch' in reprodutor) reprodutor.preservesPitch = true;
+    else if ('mozPreservesPitch' in reprodutor) reprodutor.mozPreservesPitch = true;
+    else if ('webkitPreservesPitch' in reprodutor) reprodutor.webkitPreservesPitch = true;
+
+    const label = velocidadeAtual === 1 ? '1×' : velocidadeAtual.toFixed(2).replace(/\.?0+$/, '') + '×';
+    velLabel.textContent = label;
+    btnVelocidade.classList.toggle('ativo', Math.abs(velocidadeAtual - 1) > 0.01);
+
+    if (velValor) velValor.textContent = velocidadeAtual.toFixed(2) + '×';
+    if (velSlider) velSlider.value = velocidadeAtual;
+    document.querySelectorAll('.vel-atalho').forEach(b => {
+        b.classList.toggle('ativo', Math.abs(parseFloat(b.dataset.vel) - velocidadeAtual) < 0.01);
+    });
+
+    localStorage.setItem('velocidade', velocidadeAtual.toString());
+}
+
+function definirVelocidade(v) {
+    velocidadeAtual = Math.max(0.5, Math.min(2.0, v));
+    aplicarVelocidade();
+}
+
+function abrirVelocidade() {
+    aplicarVelocidade();
+    modalVelocidade.classList.add('aberto');
+}
+
+btnVelocidade.addEventListener('click', abrirVelocidade);
+btnFecharVel.addEventListener('click', () => modalVelocidade.classList.remove('aberto'));
+modalVelocidade.addEventListener('click', e => {
+    if (e.target === modalVelocidade) modalVelocidade.classList.remove('aberto');
+});
+
+velSlider.addEventListener('input', e => {
+    definirVelocidade(parseFloat(e.target.value));
+});
+
+document.querySelectorAll('.vel-atalho').forEach(btn => {
+    btn.addEventListener('click', () => {
+        definirVelocidade(parseFloat(btn.dataset.vel));
+    });
+});
+
+/* ============ EQUALIZADOR ============ */
+const EQ_BANDAS = [
+    { freq: 60,    tipo: 'lowshelf',  label: 'Graves' },
+    { freq: 230,   tipo: 'peaking',   label: 'Baixos' },
+    { freq: 910,   tipo: 'peaking',   label: 'Médios' },
+    { freq: 3600,  tipo: 'peaking',   label: 'Altos' },
+    { freq: 14000, tipo: 'highshelf', label: 'Brilho' }
+];
+
+const EQ_PRESETS = {
+    'Normal':      [0, 0, 0, 0, 0],
+    'Rock':        [5, 3, -1, 3, 5],
+    'Pop':         [-1, 2, 4, 2, -1],
+    'Jazz':        [4, 2, -2, 2, 4],
+    'Bass Boost':  [10, 6, 0, 0, 0],
+    'Vocal':       [-4, -2, 4, 5, 2],
+    'Eletrónica':  [6, 3, 0, 3, 6],
+    'Clássica':    [3, 1, -1, 2, 4]
+};
+
+let contextoEQ = null;
+let filtrosEQ = [];
+let presetAtivoEQ = 'Normal';
+let valoresEQ = [...EQ_PRESETS['Normal']];
+
+try {
+    const guardado = JSON.parse(localStorage.getItem('eqEstado') || 'null');
+    if (guardado && Array.isArray(guardado.valores) && guardado.valores.length === 5) {
+        valoresEQ = guardado.valores;
+        presetAtivoEQ = guardado.preset || 'Personalizado';
+    }
+} catch (e) { /* ignora */ }
+
+function obterOuCriarContextoEQ() {
+    if (contextoEQ) {
+        if (contextoEQ.state === 'suspended') contextoEQ.resume();
+        return contextoEQ;
+    }
+    try {
+        const Ctx = window.AudioContext || window.webkitAudioContext;
+        contextoEQ = new Ctx();
+
+        const fonte = contextoEQ.createMediaElementSource(reprodutor);
+        let noAnterior = fonte;
+
+        filtrosEQ = EQ_BANDAS.map((banda, i) => {
+            const f = contextoEQ.createBiquadFilter();
+            f.type = banda.tipo;
+            f.frequency.value = banda.freq;
+            f.Q.value = 1.0;
+            f.gain.value = valoresEQ[i] || 0;
+            noAnterior.connect(f);
+            noAnterior = f;
+            return f;
+        });
+
+        noAnterior.connect(contextoEQ.destination);
+        return contextoEQ;
+    } catch (e) {
+        console.warn('Falha ao criar AudioContext:', e);
+        return null;
+    }
+}
+
+function aplicarValoresEQ() {
+    if (!filtrosEQ.length) return;
+    filtrosEQ.forEach((f, i) => {
+        const v = Math.max(-12, Math.min(12, valoresEQ[i] || 0));
+        f.gain.value = v;
+    });
+    localStorage.setItem('eqEstado', JSON.stringify({
+        valores: valoresEQ,
+        preset: presetAtivoEQ
+    }));
+}
+
+function atualizarUISliders() {
+    if (!eqSliders) return;
+
+    if (eqSliders.children.length !== 5) {
+        eqSliders.innerHTML = '';
+        EQ_BANDAS.forEach((banda, i) => {
+            const wrap = document.createElement('div');
+            wrap.className = 'eq-slider-wrap';
+            wrap.innerHTML = `
+                <div class="eq-slider" data-idx="${i}">
+                    <div class="eq-slider-fill"></div>
+                    <div class="eq-slider-handle"></div>
+                </div>
+                <div class="eq-slider-label" data-label="${i}">0 dB</div>
+                <div class="eq-slider-freq">${banda.freq >= 1000 ? (banda.freq/1000)+'k' : banda.freq}Hz</div>
+            `;
+            eqSliders.appendChild(wrap);
+        });
+
+        eqSliders.querySelectorAll('.eq-slider').forEach(slider => {
+            const idx = parseInt(slider.dataset.idx, 10);
+            let dragging = false;
+
+            const calcularValor = (clientY) => {
+                const rect = slider.getBoundingClientRect();
+                const y = (clientY - rect.top) / rect.height;
+                const valor = 12 - y * 24;
+                return Math.max(-12, Math.min(12, Math.round(valor)));
+            };
+
+            const aplicar = (clientY) => {
+                const v = calcularValor(clientY);
+                valoresEQ[idx] = v;
+                presetAtivoEQ = 'Personalizado';
+                atualizarUISliders();
+                atualizarUIPresets();
+                aplicarValoresEQ();
+            };
+
+            slider.addEventListener('mousedown', e => {
+                dragging = true;
+                aplicar(e.clientY);
+            });
+            slider.addEventListener('touchstart', e => {
+                dragging = true;
+                aplicar(e.touches[0].clientY);
+            }, { passive: true });
+
+            document.addEventListener('mousemove', e => {
+                if (dragging) aplicar(e.clientY);
+            });
+            document.addEventListener('touchmove', e => {
+                if (dragging) aplicar(e.touches[0].clientY);
+            }, { passive: true });
+
+            document.addEventListener('mouseup', () => dragging = false);
+            document.addEventListener('touchend', () => dragging = false);
+        });
+    }
+
+    eqSliders.querySelectorAll('.eq-slider').forEach(slider => {
+        const idx = parseInt(slider.dataset.idx, 10);
+        const v = valoresEQ[idx] || 0;
+        const fill = slider.querySelector('.eq-slider-fill');
+        const handle = slider.querySelector('.eq-slider-handle');
+
+        const pct = ((v + 12) / 24) * 100;
+        if (v >= 0) {
+            fill.style.bottom = '50%';
+            fill.style.height = `${(v / 12) * 50}%`;
+        } else {
+            fill.style.bottom = `${50 + (v / 12) * 50}%`;
+            fill.style.height = `${(-v / 12) * 50}%`;
+        }
+        handle.style.top = `${100 - pct}%`;
+    });
+
+    eqSliders.querySelectorAll('.eq-slider-label').forEach(el => {
+        const idx = parseInt(el.dataset.label, 10);
+        const v = valoresEQ[idx] || 0;
+        el.textContent = (v > 0 ? '+' : '') + v + ' dB';
+    });
+}
+
+function atualizarUIPresets() {
+    if (!eqPresets) return;
+
+    if (eqPresets.children.length === 0) {
+        Object.keys(EQ_PRESETS).forEach(nome => {
+            const btn = document.createElement('button');
+            btn.className = 'eq-preset-btn';
+            btn.dataset.preset = nome;
+            btn.textContent = nome;
+            btn.addEventListener('click', () => {
+                valoresEQ = [...EQ_PRESETS[nome]];
+                presetAtivoEQ = nome;
+                aplicarValoresEQ();
+                atualizarUISliders();
+                atualizarUIPresets();
+            });
+            eqPresets.appendChild(btn);
+        });
+    }
+
+    eqPresets.querySelectorAll('.eq-preset-btn').forEach(btn => {
+        btn.classList.toggle('ativo', btn.dataset.preset === presetAtivoEQ);
+    });
+}
+
+function abrirEQ() {
+    obterOuCriarContextoEQ();
+    aplicarValoresEQ();
+    atualizarUISliders();
+    atualizarUIPresets();
+    eqPainel.classList.add('aberto');
+    eqOverlay.classList.add('aberto');
+    document.body.classList.add('eq-aberta');
+}
+
+function fecharEQ() {
+    eqPainel.classList.remove('aberto');
+    eqOverlay.classList.remove('aberto');
+    document.body.classList.remove('eq-aberta');
+}
+
+btnEQ.addEventListener('click', abrirEQ);
+btnFecharEQ.addEventListener('click', fecharEQ);
+eqOverlay.addEventListener('click', fecharEQ);
+
+btnEQReset.addEventListener('click', () => {
+    valoresEQ = [...EQ_PRESETS['Normal']];
+    presetAtivoEQ = 'Normal';
+    aplicarValoresEQ();
+    atualizarUISliders();
+    atualizarUIPresets();
+});
+
+/* ============ BACKUP (EXPORTAR / IMPORTAR) ============ */
+function blobParaBase64(blob) {
+    return new Promise((resolve, reject) => {
+        const leitor = new FileReader();
+        leitor.onload = () => resolve(leitor.result);
+        leitor.onerror = () => reject(leitor.error);
+        leitor.readAsDataURL(blob);
+    });
+}
+
+function base64ParaBlob(dataUrl) {
+    try {
+        const [meta, b64] = dataUrl.split(',');
+        const mime = (meta.match(/data:([^;]+);/) || [])[1] || 'image/jpeg';
+        const bin = atob(b64);
+        const bytes = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+        return new Blob([bytes], { type: mime });
+    } catch (e) {
+        return null;
+    }
+}
+
+async function exportarBackup() {
+    const dados = {
+        versao: 1,
+        app: 'leitor-offline',
+        exportado: new Date().toISOString(),
+        lista: listaReproducao.slice(),
+        recentes: recentes.slice(),
+        letrasLrc: { ...musicasLrc },
+        musicas: {}
+    };
+
+    for (const m of musicas) {
+        const entrada = {};
+        if (m.nomeEditado) entrada.nomeEditado = m.nomeEditado;
+        if (m.artistaEditado) entrada.artistaEditado = m.artistaEditado;
+        if (m.letraManual) entrada.letraManual = m.letraManual;
+        if (m.removida) entrada.removida = true;
+        if (m.capaRemovida) entrada.capaRemovida = true;
+        if (m.capaManualBlob) {
+            try {
+                entrada.capaManualBase64 = await blobParaBase64(m.capaManualBlob);
+            } catch (e) { /* ignora */ }
+        }
+
+        if (Object.keys(entrada).length > 0) {
+            dados.musicas[m.id] = entrada;
+        }
+    }
+
+    const json = JSON.stringify(dados, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+
+    const agora = new Date();
+    const dataStr = agora.getFullYear() + '-' +
+        String(agora.getMonth() + 1).padStart(2, '0') + '-' +
+        String(agora.getDate()).padStart(2, '0');
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `leitor-offline-backup-${dataStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+    modalBackup.classList.remove('aberto');
+
+    const nFav = listaReproducao.length;
+    const nMeta = Object.keys(dados.musicas).length;
+    mostrarToast(`Backup exportado · ${nFav} favoritos · ${nMeta} metadados`);
+}
+
+async function importarBackup(ficheiro) {
+    let dados;
+    try {
+        const texto = await ficheiro.text();
+        dados = JSON.parse(texto);
+    } catch (e) {
+        mostrarToast('❌ Ficheiro inválido');
+        return;
+    }
+
+    if (!dados || dados.app !== 'leitor-offline') {
+        mostrarToast('❌ Este ficheiro não é um backup do Leitor Offline');
+        return;
+    }
+
+    let nFav = 0, nMeta = 0, nLetras = 0, nCaps = 0;
+
+    if (Array.isArray(dados.lista)) {
+        dados.lista.forEach(id => {
+            if (!listaReproducao.includes(id)) {
+                listaReproducao.push(id);
+                nFav++;
+            }
+        });
+        salvarMeta('lista', listaReproducao);
+    }
+
+    if (Array.isArray(dados.recentes)) {
+        const set = new Set(recentes);
+        dados.recentes.forEach(id => {
+            if (!set.has(id)) { recentes.push(id); set.add(id); }
+        });
+        recentes = recentes.slice(0, 50);
+        salvarMeta('recentes', recentes);
+    }
+
+    if (dados.letrasLrc && typeof dados.letrasLrc === 'object') {
+        Object.entries(dados.letrasLrc).forEach(([k, v]) => {
+            if (!musicasLrc[k]) nLetras++;
+            musicasLrc[k] = v;
+        });
+        salvarMeta('letras', musicasLrc);
+    }
+
+    if (dados.musicas && typeof dados.musicas === 'object') {
+        for (const [id, entrada] of Object.entries(dados.musicas)) {
+            const m = musicas.find(x => x.id === id);
+            if (!m) continue;
+
+            let alterou = false;
+
+            if (entrada.nomeEditado && m.nomeEditado !== entrada.nomeEditado) {
+                m.nomeEditado = entrada.nomeEditado;
+                alterou = true;
+            }
+            if (entrada.artistaEditado && m.artistaEditado !== entrada.artistaEditado) {
+                m.artistaEditado = entrada.artistaEditado;
+                alterou = true;
+            }
+            if (entrada.letraManual && m.letraManual !== entrada.letraManual) {
+                m.letraManual = entrada.letraManual;
+                alterou = true;
+            }
+            if (entrada.removida && !m.removida) {
+                m.removida = true;
+                alterou = true;
+            }
+            if (entrada.capaRemovida && !m.capaRemovida) {
+                m.capaRemovida = true;
+                alterou = true;
+            }
+            if (entrada.capaManualBase64) {
+                const blob = base64ParaBlob(entrada.capaManualBase64);
+                if (blob) {
+                    m.capaManualBlob = blob;
+                    if (m.capaManualUrl) URL.revokeObjectURL(m.capaManualUrl);
+                    m.capaManualUrl = URL.createObjectURL(blob);
+                    alterou = true;
+                    nCaps++;
+                }
+            }
+
+            if (alterou) {
+                nMeta++;
+                await persistirMetadadosBackup(m, entrada);
+            }
+        }
+    }
+
+    modalBackup.classList.remove('aberto');
+    renderizarBiblioteca();
+
+    const partes = [];
+    if (nFav) partes.push(`${nFav} favoritos`);
+    if (nMeta) partes.push(`${nMeta} metadados`);
+    if (nCaps) partes.push(`${nCaps} capas`);
+    if (nLetras) partes.push(`${nLetras} letras .lrc`);
+
+    mostrarToast(partes.length
+        ? `Backup importado · ${partes.join(' · ')}`
+        : 'Backup importado (nada novo a adicionar)');
+}
+
+async function persistirMetadadosBackup(musica, entrada) {
+    if (!db) return;
+    return new Promise(resolve => {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (!dados) return resolve();
+
+                if (entrada.nomeEditado) dados.nomeEditado = entrada.nomeEditado;
+                else delete dados.nomeEditado;
+
+                if (entrada.artistaEditado) dados.artistaEditado = entrada.artistaEditado;
+                else delete dados.artistaEditado;
+
+                if (entrada.letraManual) dados.letraManual = entrada.letraManual;
+                else delete dados.letraManual;
+
+                if (entrada.removida) dados.removida = true;
+                else delete dados.removida;
+
+                if (entrada.capaRemovida) dados.capaRemovida = true;
+                else delete dados.capaRemovida;
+
+                if (musica.capaManualBlob) dados.capaManualBlob = musica.capaManualBlob;
+                else delete dados.capaManualBlob;
+
+                store.put(dados);
+                resolve();
+            };
+            req.onerror = () => resolve();
+        } catch (e) {
+            console.warn('Erro a persistir metadados do backup:', e);
+            resolve();
+        }
+    });
+}
+
+btnBackup.addEventListener('click', () => modalBackup.classList.add('aberto'));
+btnFecharBackup.addEventListener('click', () => modalBackup.classList.remove('aberto'));
+modalBackup.addEventListener('click', e => {
+    if (e.target === modalBackup) modalBackup.classList.remove('aberto');
+});
+
+opcaoExportar.addEventListener('click', exportarBackup);
+
+opcaoImportar.addEventListener('click', () => {
+    inputBackup.click();
+});
+
+inputBackup.addEventListener('change', async e => {
+    const ficheiro = e.target.files[0];
+    if (!ficheiro) return;
+    await importarBackup(ficheiro);
+    inputBackup.value = '';
+});
+
+/* ============ ENVIAR MÚSICA ============ */
+async function enviarMusica(musica) {
+    if (!musica || !musica.arquivo) {
+        mostrarToast('❌ Ficheiro indisponível');
+        return;
+    }
+
+    const nomeOriginal = musica.arquivo.name;
+    const nomeFicheiro = nomeOriginal || `${musica.nome || 'musica'}.mp3`;
+
+    let ficheiroEnviar;
+    try {
+        ficheiroEnviar = new File([musica.arquivo], nomeFicheiro, {
+            type: musica.arquivo.type || 'audio/mpeg'
+        });
+    } catch (e) {
+        ficheiroEnviar = musica.arquivo;
+    }
+
+    // 1) Tenta Web Share API com ficheiros
+    if (navigator.canShare && navigator.canShare({ files: [ficheiroEnviar] }) && navigator.share) {
+        try {
+            await navigator.share({
+                files: [ficheiroEnviar],
+                title: obterNomeEfetivo(musica),
+                text: `A ouvir: ${obterNomeEfetivo(musica)}`
+            });
+            return;
+        } catch (err) {
+            if (err.name === 'AbortError') return;
+            console.warn('Share falhou, a tentar download:', err);
+        }
+    }
+
+    // 2) Fallback: download direto
+    try {
+        const url = URL.createObjectURL(ficheiroEnviar);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = nomeFicheiro;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+
+        mostrarToast('📥 Música descarregada para Downloads');
+    } catch (e) {
+        console.warn('Erro ao descarregar:', e);
+        mostrarToast('❌ Não foi possível enviar');
+    }
+}
+
+/* ============ MEDIA SESSION API ============ */
+function atualizarMediaSession(musica) {
+    if (!('mediaSession' in navigator)) return;
+
+    try {
+        const capa = obterCapaEfetiva(musica);
+        const artwork = capa
+            ? [
+                { src: capa, sizes: '96x96',   type: 'image/jpeg' },
+                { src: capa, sizes: '128x128', type: 'image/jpeg' },
+                { src: capa, sizes: '192x192', type: 'image/jpeg' },
+                { src: capa, sizes: '256x256', type: 'image/jpeg' },
+                { src: capa, sizes: '384x384', type: 'image/jpeg' },
+                { src: capa, sizes: '512x512', type: 'image/jpeg' }
+              ]
+            : [];
+
+        navigator.mediaSession.metadata = new MediaMetadata({
+            title: obterNomeEfetivo(musica),
+            artist: obterArtistaEfetivo(musica),
+            album: musica.pasta || 'Leitor Offline',
+            artwork: artwork
+        });
+    } catch (e) {
+        console.warn('MediaSession metadata falhou:', e);
+    }
+}
+
+function configurarHandlersMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+
+    const acoes = {
+        'play':          () => { reprodutor.play().catch(() => {}); },
+        'pause':         () => { reprodutor.pause(); },
+        'stop':          () => { reprodutor.pause(); reprodutor.currentTime = 0; },
+        'previoustrack': () => { musicaAnterior(); },
+        'nexttrack':     () => { proximaMusica(); },
+        'seekbackward':  (detalhes) => {
+            const offset = (detalhes && detalhes.seekOffset) || 10;
+            reprodutor.currentTime = Math.max(0, reprodutor.currentTime - offset);
+        },
+        'seekforward':   (detalhes) => {
+            const offset = (detalhes && detalhes.seekOffset) || 10;
+            reprodutor.currentTime = Math.min(reprodutor.duration || 0, reprodutor.currentTime + offset);
+        },
+        'seekto':        (detalhes) => {
+            if (detalhes && detalhes.seekTime != null) {
+                reprodutor.currentTime = detalhes.seekTime;
+            }
+        }
+    };
+
+    Object.entries(acoes).forEach(([acao, handler]) => {
+        try {
+            navigator.mediaSession.setActionHandler(acao, handler);
+        } catch (e) {
+            // Ação não suportada neste browser — ignora silenciosamente
+        }
+    });
+}
+
+function atualizarEstadoMediaSession() {
+    if (!('mediaSession' in navigator)) return;
+    try {
+        navigator.mediaSession.playbackState = reprodutor.paused ? 'paused' : 'playing';
+    } catch (e) { /* ignora */ }
+
+    if ('setPositionState' in navigator.mediaSession && !isNaN(reprodutor.duration) && reprodutor.duration > 0) {
+        try {
+            navigator.mediaSession.setPositionState({
+                duration: reprodutor.duration,
+                playbackRate: reprodutor.playbackRate || 1,
+                position: Math.min(reprodutor.currentTime, reprodutor.duration)
+            });
+        } catch (e) { /* ignora */ }
+    }
+}
+
+/* ============ ESTATÍSTICAS ============ */
+function registarPlay(musicaId) {
+    if (!db || !musicaId) return;
+    const agora = Date.now();
+
+    if (ultimoRegisto && ultimoRegisto.musicaId === musicaId && (agora - ultimoRegisto.timestamp) < 30000) {
+        return;
+    }
+
+    const registo = { musicaId, timestamp: agora };
+
+    try {
+        const tx = db.transaction(['historico'], 'readwrite');
+        const store = tx.objectStore('historico');
+        const req = store.add(registo);
+        req.onsuccess = (e) => {
+            registo.id = e.target.result;
+            registosHistorico.push(registo);
+            ultimoRegisto = registo;
+        };
+    } catch (e) {
+        console.warn('Erro ao registar play:', e);
+    }
+}
+
+async function carregarHistorico() {
+    if (!db) return [];
+    return new Promise(resolve => {
+        try {
+            const tx = db.transaction(['historico'], 'readonly');
+            const req = tx.objectStore('historico').getAll();
+            req.onsuccess = () => {
+                registosHistorico = req.result || [];
+                resolve(registosHistorico);
+            };
+            req.onerror = () => resolve([]);
+        } catch (e) {
+            resolve([]);
+        }
+    });
+}
+
+function calcularEstatisticas() {
+    const totalPlays = registosHistorico.length;
+
+    const porMusica = {};
+    registosHistorico.forEach(r => {
+        porMusica[r.musicaId] = (porMusica[r.musicaId] || 0) + 1;
+    });
+
+    const musicasUnicas = Object.keys(porMusica).length;
+    const totalSegundos = totalPlays * 180;
+
+    const dias = [];
+    for (let i = 6; i >= 0; i--) {
+        const d = new Date();
+        d.setHours(0, 0, 0, 0);
+        d.setDate(d.getDate() - i);
+        const inicio = d.getTime();
+        const fim = inicio + 24 * 60 * 60 * 1000;
+        const count = registosHistorico.filter(r => r.timestamp >= inicio && r.timestamp < fim).length;
+        const minutos = count * 3;
+        dias.push({
+            label: d.toLocaleDateString('pt-PT', { weekday: 'short' }).slice(0, 3),
+            minutos,
+            count
+        });
+    }
+
+    const top = Object.entries(porMusica)
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([id, count]) => ({ musica: musicas.find(m => m.id === id), count }))
+        .filter(x => x.musica);
+
+    const recentesHist = registosHistorico
+        .slice()
+        .sort((a, b) => b.timestamp - a.timestamp)
+        .slice(0, 20)
+        .map(r => ({ ...r, musica: musicas.find(m => m.id === r.musicaId) }))
+        .filter(x => x.musica);
+
+    return { totalSegundos, totalPlays, musicasUnicas, dias, top, recentesHist };
+}
+
+function formatarDuracaoLonga(seg) {
+    if (seg < 60) return `${seg}s`;
+    const h = Math.floor(seg / 3600);
+    const m = Math.floor((seg % 3600) / 60);
+    if (h > 0) return `${h}h ${m}min`;
+    return `${m}min`;
+}
+
+function formatarTempoRelativo(timestamp) {
+    const diff = Date.now() - timestamp;
+    const seg = Math.floor(diff / 1000);
+    if (seg < 60) return 'agora';
+    const min = Math.floor(seg / 60);
+    if (min < 60) return `há ${min}min`;
+    const h = Math.floor(min / 60);
+    if (h < 24) return `há ${h}h`;
+    const d = Math.floor(h / 24);
+    if (d < 7) return `há ${d}d`;
+    return new Date(timestamp).toLocaleDateString('pt-PT', { day: 'numeric', month: 'short' });
+}
+
+function renderizarEstatisticas() {
+    if (!statsConteudo) return;
+
+    const stats = calcularEstatisticas();
+
+    if (stats.totalPlays === 0) {
+        statsConteudo.innerHTML = `
+            <div class="stats-vazio">
+                <i class="fa fa-bar-chart"></i>
+                <p>Ainda sem estatísticas.<br>Comece a ouvir músicas para as ver aqui.</p>
+            </div>
+        `;
+        return;
+    }
+
+    const maxMin = Math.max(...stats.dias.map(d => d.minutos), 1);
+    const barrasHTML = stats.dias.map(d => {
+        const altura = d.minutos > 0 ? Math.max(8, (d.minutos / maxMin) * 90) : 4;
+        const classe = d.minutos > 0 ? '' : 'vazia';
+        return `
+            <div class="stats-grafico-col">
+                <div class="stats-grafico-barra ${classe}" style="height: ${altura}%"></div>
+                <div class="stats-grafico-dia">${d.label}</div>
+                ${d.minutos > 0 ? `<div class="stats-grafico-min">${d.minutos}min</div>` : ''}
+            </div>
+        `;
+    }).join('');
+
+    const topHTML = stats.top.map((item, i) => {
+        const capa = obterCapaEfetiva(item.musica);
+        return `
+            <div class="stats-top-item" data-id="${escapeHtml(item.musica.id)}">
+                <div class="stats-top-pos">${i + 1}</div>
+                <div class="stats-top-capa" ${capa ? `style="background-image:url(${capa})"` : ''}>
+                    ${capa ? '' : '<i class="fa fa-music"></i>'}
+                </div>
+                <div class="stats-top-meta">
+                    <div class="stats-top-titulo">${escapeHtml(obterNomeEfetivo(item.musica))}</div>
+                    <div class="stats-top-artista">${escapeHtml(obterArtistaEfetivo(item.musica))}</div>
+                </div>
+                <div class="stats-top-contagem">${item.count}×</div>
+            </div>
+        `;
+    }).join('');
+
+    const histHTML = stats.recentesHist.map(r => `
+        <div class="stats-hist-item">
+            <span class="stats-hist-hora">${formatarTempoRelativo(r.timestamp)}</span>
+            <span class="stats-hist-titulo">${escapeHtml(obterNomeEfetivo(r.musica))}</span>
+        </div>
+    `).join('');
+
+    statsConteudo.innerHTML = `
+        <div class="stats-cartoes">
+            <div class="stats-cartao destaque">
+                <i class="fa fa-clock-o stats-cartao-icone"></i>
+                <span class="stats-cartao-valor">${formatarDuracaoLonga(stats.totalSegundos)}</span>
+                <span class="stats-cartao-label">Tempo total ouvido</span>
+            </div>
+            <div class="stats-cartao">
+                <i class="fa fa-play-circle stats-cartao-icone"></i>
+                <span class="stats-cartao-valor">${stats.totalPlays}</span>
+                <span class="stats-cartao-label">Reproduções</span>
+            </div>
+            <div class="stats-cartao">
+                <i class="fa fa-music stats-cartao-icone"></i>
+                <span class="stats-cartao-valor">${stats.musicasUnicas}</span>
+                <span class="stats-cartao-label">Músicas únicas</span>
+            </div>
+        </div>
+
+        <div class="stats-secao">
+            <div class="stats-secao-titulo">Últimos 7 dias</div>
+            <div class="stats-grafico">${barrasHTML}</div>
+        </div>
+
+        ${stats.top.length > 0 ? `
+        <div class="stats-secao">
+            <div class="stats-secao-titulo">Top 5 mais ouvidas</div>
+            <div class="stats-top">${topHTML}</div>
+        </div>
+        ` : ''}
+
+        ${stats.recentesHist.length > 0 ? `
+        <div class="stats-secao">
+            <div class="stats-secao-titulo">Audições recentes</div>
+            <div class="stats-historico">${histHTML}</div>
+        </div>
+        ` : ''}
+    `;
+
+    statsConteudo.querySelectorAll('.stats-top-item').forEach(el => {
+        el.addEventListener('click', () => {
+            const id = el.dataset.id;
+            const m = musicas.find(x => x.id === id);
+            if (!m || m.removida) return;
+            irParaTela('biblioteca');
+            setTimeout(() => {
+                tocarDaLista(obterMusicasAtivas(), id);
+                irParaTela('player');
+            }, 100);
+        });
+    });
+}
+
+/* ============ LIXEIRA ============ */
+function renderizarLixeira() {
+    const removidas = musicas.filter(m => m.removida);
+
+    if (removidas.length === 0) {
+        bibConteudo.innerHTML = `<div class="vazio"><i class="fa fa-trash-o"></i><p>A lixeira está vazia.</p></div>`;
+        return;
+    }
+
+    const topo = document.createElement('div');
+    topo.className = 'removidas-topo';
+    topo.innerHTML = `
+        <span class="removidas-info">${removidas.length} música(s) removida(s)</span>
+        <button class="removidas-btn-restaurar-todas" id="btnRestaurarTodas">
+            <i class="fa fa-refresh"></i> Restaurar todas
+        </button>
+    `;
+    bibConteudo.appendChild(topo);
+
+    document.getElementById('btnRestaurarTodas').addEventListener('click', () => {
+        restaurarMusicas(removidas.map(m => m.id));
+    });
+
+    const frag = document.createDocumentFragment();
+
+    removidas.forEach(m => {
+        const item = document.createElement('div');
+        item.className = 'musica-item removida';
+        item.dataset.id = m.id;
+
+        if (idsSelecionados.has(m.id)) item.classList.add('selecionada');
+
+        const capaEfetiva = obterCapaEfetiva(m);
+        const nomeEfetivo = obterNomeEfetivo(m);
+        const artistaEfetivo = obterArtistaEfetivo(m);
+
+        item.innerHTML = `
+            <div class="musica-capa" ${capaEfetiva ? `style="background-image:url(${capaEfetiva})"` : ''}>
+                ${capaEfetiva ? '' : '<i class="fa fa-music"></i>'}
+            </div>
+            <div class="musica-meta">
+                <div class="musica-titulo">${escapeHtml(nomeEfetivo)}</div>
+                <div class="musica-info">${escapeHtml(artistaEfetivo)}</div>
+            </div>
+            ${!modoSelecao ? `
+                <button class="musica-btn-restaurar" data-restaurar="${m.id}" title="Restaurar">
+                    <i class="fa fa-undo"></i>
+                </button>
+                <button class="musica-btn-menu" data-menu="${m.id}"><i class="fa fa-ellipsis-v"></i></button>
+            ` : ''}
+        `;
+
+        if (!capaEfetiva) carregarCapaMusica(m, item.querySelector('.musica-capa'));
+
+        item.addEventListener('click', e => {
+            if (e.target.closest('.musica-btn-menu') || e.target.closest('.musica-btn-restaurar')) return;
+            if (modoSelecao) { toggleSelecao(m.id, item); return; }
+            restaurarMusicas([m.id]);
+        });
+
+        const btnRestaurar = item.querySelector('.musica-btn-restaurar');
+        if (btnRestaurar) btnRestaurar.addEventListener('click', e => {
+            e.stopPropagation();
+            restaurarMusicas([m.id]);
+        });
+
+        const btnMenu = item.querySelector('.musica-btn-menu');
+        if (btnMenu) btnMenu.addEventListener('click', e => {
+            e.stopPropagation();
+            abrirMenuMusicaRemovida(m);
+        });
+
+        let pressTimer = null;
+        item.addEventListener('touchstart', () => {
+            pressTimer = setTimeout(() => {
+                modoSelecao = true;
+                toggleSelecao(m.id, item);
+                atualizarBarraSelecao();
+            }, 550);
+        }, { passive: true });
+        ['touchend', 'touchmove', 'touchcancel'].forEach(ev =>
+            item.addEventListener(ev, () => clearTimeout(pressTimer), { passive: true })
+        );
+
+        frag.appendChild(item);
+    });
+
+    bibConteudo.appendChild(frag);
+}
+
+function restaurarMusicas(ids) {
+    if (!ids.length) return;
+
+    ids.forEach(id => {
+        const m = musicas.find(x => x.id === id);
+        if (m) {
+            delete m.removida;
+            persistirRemocao(m, false);
+        }
+    });
+
+    renderizarBiblioteca();
+    renderizarFilaSeAberto();
+
+    const texto = ids.length === 1 ? `1 música restaurada` : `${ids.length} músicas restauradas`;
+    mostrarToast(`♻️ ${texto}`);
+}
+
+async function eliminarDefinitivamente(ids) {
+    if (!ids.length) return;
+
+    musicas = musicas.filter(m => !ids.includes(m.id));
+
+    listaReproducao = listaReproducao.filter(id => !ids.includes(id));
+    recentes = recentes.filter(id => !ids.includes(id));
+    salvarMeta('lista', listaReproducao);
+    salvarMeta('recentes', recentes);
+
+    if (db) {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            ids.forEach(id => store.delete(id));
+        } catch (e) {
+            console.warn('Erro a eliminar:', e);
+        }
+    }
+
+    reconstruirPastas();
+    renderizarBiblioteca();
+
+    const texto = ids.length === 1 ? `1 música eliminada` : `${ids.length} músicas eliminadas`;
+    mostrarToast(`🗑️ ${texto} definitivamente`);
+}
+
+function abrirMenuMusicaRemovida(m) {
+    musicaMenuAlvo = m;
+    menuMusicaTitulo.textContent = obterNomeEfetivo(m);
+    menuMusicaArtista.textContent = obterArtistaEfetivo(m);
+
+    document.getElementById('menuAdicionarLista').style.display = 'none';
+    document.getElementById('menuEnviarMusica').style.display = 'none';
+    document.getElementById('menuEditarMeta').style.display = 'none';
+    menuSelecionarMulti.style.display = 'none';
+
+    const btnRemover = document.getElementById('menuRemoverMusica');
+    btnRemover.querySelector('div > div').textContent = 'Eliminar definitivamente';
+    btnRemover.querySelector('.modal-acao-sub').textContent = 'Esta ação não pode ser anulada';
+    btnRemover.style.display = 'flex';
+
+    modalMenuMusica.classList.add('aberto');
+}
+
+function atualizarAbaRemovidas() {
+    const nRemovidas = musicas.filter(m => m.removida).length;
+    const aba = document.getElementById('abaRemovidas');
+    if (!aba) return;
+
+    if (nRemovidas === 0) {
+        aba.classList.add('escondido');
+        if (abaAtiva === 'removidas') {
+            abaAtiva = 'todas';
+            document.querySelectorAll('.bib-aba').forEach(a => {
+                a.classList.toggle('ativa', a.dataset.aba === 'todas');
+            });
+        }
+    } else {
+        aba.classList.remove('escondido');
+        aba.textContent = `Removidas (${nRemovidas})`;
+    }
+}
+
+/* ============ REMOVER / ANULAR ============ */
+function removerMusicas(ids) {
+    if (!ids.length) return;
+
+    const afetadas = ids.map(id => musicas.find(m => m.id === id)).filter(Boolean);
+    afetadas.forEach(m => { m.removida = true; });
+    afetadas.forEach(m => persistirRemocao(m, true));
+
+    if (abaAtiva === 'lista') {
+        ids.forEach(id => {
+            listaReproducao = listaReproducao.filter(x => x !== id);
+        });
+        salvarMeta('lista', listaReproducao);
+    }
+
+    if (filaAtual[indiceFila] && ids.includes(filaAtual[indiceFila].id)) {
+        reprodutor.pause();
+        miniPlayer.classList.remove('visivel');
+    }
+
+    filaAtual = filaAtual.filter(m => !ids.includes(m.id));
+    if (indiceFila >= filaAtual.length) indiceFila = filaAtual.length - 1;
+    if (indiceFila < 0 && filaAtual.length > 0) indiceFila = 0;
+
+    renderizarBiblioteca();
+    renderizarFilaSeAberto();
+    atualizarContadorSeTocando();
+
+    if (remocoesPendentes) clearTimeout(remocoesPendentes.timer);
+
+    const texto = ids.length === 1 ? `1 música removida` : `${ids.length} músicas removidas`;
+    mostrarToastComAcao(texto, 'ANULAR', () => anularRemocao());
+
+    const timer = setTimeout(() => { remocoesPendentes = null; }, 4000);
+    remocoesPendentes = { ids: ids.slice(), timer };
+}
+
+function anularRemocao() {
+    if (!remocoesPendentes) return;
+    clearTimeout(remocoesPendentes.timer);
+    remocoesPendentes.ids.forEach(id => {
+        const m = musicas.find(x => x.id === id);
+        if (m) {
+            delete m.removida;
+            persistirRemocao(m, false);
+        }
+    });
+    remocoesPendentes = null;
+    renderizarBiblioteca();
+    mostrarToast('Remoção anulada');
+}
+
+async function persistirRemocao(musica, removida) {
+    if (!db) return;
+    return new Promise(resolve => {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (!dados) return resolve();
+                if (removida) dados.removida = true;
+                else delete dados.removida;
+                store.put(dados);
+                resolve();
+            };
+            req.onerror = () => resolve();
+        } catch (e) {
+            console.warn('Erro a persistir remoção:', e);
+            resolve();
+        }
+    });
+}
+
+function atualizarContadorSeTocando() {
+    if (indiceFila < 0 || !filaAtual.length) {
+        playerContador.textContent = '— / —';
+        return;
+    }
+    const pos = `${indiceFila + 1}`.padStart(2, '0');
+    const tot = `${filaAtual.length}`.padStart(2, '0');
+    playerContador.textContent = `${pos} / ${tot}`;
+}
+
 /* ============ RENDERIZAÇÃO ============ */
 function renderizarBiblioteca() {
     bibConteudo.innerHTML = '';
+    atualizarAbaRemovidas();
 
     if (abaAtiva === 'pastas' && pastaAberta) {
         renderizarListaMusicas(filtrarPorPasta(pastaAberta));
@@ -1480,12 +4099,14 @@ function renderizarBiblioteca() {
 
     switch (abaAtiva) {
         case 'todas':
-            renderizarListaMusicas(filtrarPorBusca(musicas));
+            renderizarListaMusicas(filtrarPorBusca(obterMusicasAtivas()));
             break;
         case 'lista': {
-            const favs = listaReproducao.map(id => musicas.find(m => m.id === id)).filter(Boolean);
+            const favs = listaReproducao
+                .map(id => musicas.find(m => m.id === id))
+                .filter(m => m && !m.removida);
             if (favs.length === 0) {
-                bibConteudo.innerHTML = `<div class="vazio"><i class="fa fa-heart-o"></i><p>A sua Lista de reprodução está vazia.<br>Pressione uma música em "Todas" para adicionar.</p></div>`;
+                bibConteudo.innerHTML = `<div class="vazio"><i class="fa fa-heart-o"></i><p>A sua Lista de reprodução está vazia.<br>Toque no coração de uma música para a adicionar.</p></div>`;
             } else {
                 renderizarListaMusicas(filtrarPorBusca(favs));
             }
@@ -1495,7 +4116,9 @@ function renderizarBiblioteca() {
             renderizarPastas();
             break;
         case 'recentes': {
-            const rec = recentes.map(id => musicas.find(m => m.id === id)).filter(Boolean);
+            const rec = recentes
+                .map(id => musicas.find(m => m.id === id))
+                .filter(m => m && !m.removida);
             if (rec.length === 0) {
                 bibConteudo.innerHTML = `<div class="vazio"><i class="fa fa-clock-o"></i><p>Ainda não ouviu nenhuma música.</p></div>`;
             } else {
@@ -1503,18 +4126,27 @@ function renderizarBiblioteca() {
             }
             break;
         }
+        case 'removidas':
+            renderizarLixeira();
+            break;
     }
 }
 
 function filtrarPorBusca(lista) {
     if (!filtroBusca) return lista;
     const q = filtroBusca.toLowerCase();
-    return lista.filter(m => m.nome.toLowerCase().includes(q) || m.artista.toLowerCase().includes(q));
+    return lista.filter(m => {
+        const nome = obterNomeEfetivo(m).toLowerCase();
+        const artista = obterArtistaEfetivo(m).toLowerCase();
+        return nome.includes(q) || artista.includes(q);
+    });
 }
 
 function filtrarPorPasta(pasta) {
     const ids = pastas[pasta] || [];
-    return ids.map(id => musicas.find(m => m.id === id)).filter(Boolean);
+    return ids
+        .map(id => musicas.find(m => m.id === id))
+        .filter(m => m && !m.removida);
 }
 
 function renderizarListaMusicas(lista, mostrarRecentes = false) {
@@ -1533,21 +4165,32 @@ function renderizarListaMusicas(lista, mostrarRecentes = false) {
         if (naFila) item.classList.add('tocando');
         if (idsSelecionados.has(m.id)) item.classList.add('selecionada');
 
+        const ehFavorita = listaReproducao.includes(m.id);
+        const capaEfetiva = obterCapaEfetiva(m);
+        const nomeEfetivo = obterNomeEfetivo(m);
+        const artistaEfetivo = obterArtistaEfetivo(m);
+        const pastaInfo = m.pasta && m.pasta !== 'Raiz' ? ' · ' + m.pasta : '';
+
         item.innerHTML = `
-            <div class="musica-capa" ${m.capa ? `style="background-image:url(${m.capa})"` : ''}>
-                ${m.capa ? '' : '<i class="fa fa-music"></i>'}
+            <div class="musica-capa" ${capaEfetiva ? `style="background-image:url(${capaEfetiva})"` : ''}>
+                ${capaEfetiva ? '' : '<i class="fa fa-music"></i>'}
             </div>
             <div class="musica-meta">
-                <div class="musica-titulo">${escapeHtml(m.nome)}</div>
-                <div class="musica-info">${escapeHtml(m.artista)}${m.pasta && m.pasta !== 'Raiz' ? ' · ' + escapeHtml(m.pasta) : ''}</div>
+                <div class="musica-titulo">${escapeHtml(nomeEfetivo)}</div>
+                <div class="musica-info">${escapeHtml(artistaEfetivo)}${escapeHtml(pastaInfo)}</div>
             </div>
-            ${!modoSelecao ? `<button class="musica-btn-menu" data-menu="${m.id}"><i class="fa fa-ellipsis-v"></i></button>` : ''}
+            ${!modoSelecao ? `
+                <button class="musica-btn-fav ${ehFavorita ? 'ativo' : ''}" data-fav="${m.id}" title="Favorito">
+                    <i class="fa ${ehFavorita ? 'fa-heart' : 'fa-heart-o'}"></i>
+                </button>
+                <button class="musica-btn-menu" data-menu="${m.id}"><i class="fa fa-ellipsis-v"></i></button>
+            ` : ''}
         `;
 
-        if (!m.capa) carregarCapaMusica(m, item.querySelector('.musica-capa'));
+        if (!capaEfetiva) carregarCapaMusica(m, item.querySelector('.musica-capa'));
 
         item.addEventListener('click', e => {
-            if (e.target.closest('.musica-btn-menu')) return;
+            if (e.target.closest('.musica-btn-menu') || e.target.closest('.musica-btn-fav')) return;
             if (modoSelecao) { toggleSelecao(m.id, item); return; }
             tocarDaLista(lista, m.id, mostrarRecentes);
         });
@@ -1555,6 +4198,12 @@ function renderizarListaMusicas(lista, mostrarRecentes = false) {
         const btnMenu = item.querySelector('.musica-btn-menu');
         if (btnMenu) btnMenu.addEventListener('click', e => {
             e.stopPropagation(); abrirMenuMusica(m);
+        });
+
+        const btnFav = item.querySelector('.musica-btn-fav');
+        if (btnFav) btnFav.addEventListener('click', e => {
+            e.stopPropagation();
+            alternarFavorito(m.id, btnFav);
         });
 
         let pressTimer = null;
@@ -1609,17 +4258,34 @@ function renderizarPastas() {
                 const item = document.createElement('div');
                 item.className = 'musica-item';
                 item.dataset.id = m.id;
+                const capaEfetiva = obterCapaEfetiva(m);
                 item.innerHTML = `
-                    <div class="musica-capa" ${m.capa ? `style="background-image:url(${m.capa})"` : ''}>
-                        ${m.capa ? '' : '<i class="fa fa-music"></i>'}
+                    <div class="musica-capa" ${capaEfetiva ? `style="background-image:url(${capaEfetiva})"` : ''}>
+                        ${capaEfetiva ? '' : '<i class="fa fa-music"></i>'}
                     </div>
                     <div class="musica-meta">
-                        <div class="musica-titulo">${escapeHtml(m.nome)}</div>
-                        <div class="musica-info">${escapeHtml(m.artista)}</div>
+                        <div class="musica-titulo">${escapeHtml(obterNomeEfetivo(m))}</div>
+                        <div class="musica-info">${escapeHtml(obterArtistaEfetivo(m))}</div>
                     </div>
                 `;
-                if (!m.capa) carregarCapaMusica(m, item.querySelector('.musica-capa'));
-                item.addEventListener('click', () => tocarDaLista(lista, m.id));
+                if (!capaEfetiva) carregarCapaMusica(m, item.querySelector('.musica-capa'));
+
+                const ehFav = listaReproducao.includes(m.id);
+                const favBtn = document.createElement('button');
+                favBtn.className = `musica-btn-fav ${ehFav ? 'ativo' : ''}`;
+                favBtn.dataset.fav = m.id;
+                favBtn.title = 'Favorito';
+                favBtn.innerHTML = `<i class="fa ${ehFav ? 'fa-heart' : 'fa-heart-o'}"></i>`;
+                favBtn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    alternarFavorito(m.id, favBtn);
+                });
+                item.appendChild(favBtn);
+
+                item.addEventListener('click', e => {
+                    if (e.target.closest('.musica-btn-fav')) return;
+                    tocarDaLista(lista, m.id);
+                });
                 frag.appendChild(item);
             });
             listaWrap.appendChild(frag);
@@ -1656,17 +4322,25 @@ function reproduzirAtual(autoPlay = true) {
     if (indiceFila < 0 || indiceFila >= filaAtual.length) return;
     const m = filaAtual[indiceFila];
     reprodutor.src = m.url;
+    reprodutor.playbackRate = velocidadeAtual;
     if (autoPlay) reprodutor.play().catch(() => {});
-    atualizarTitulo(m.nome);
-    artistaAtual.textContent = m.artista;
+    atualizarTitulo(obterNomeEfetivo(m));
+    artistaAtual.textContent = obterArtistaEfetivo(m);
     const pos = `${indiceFila + 1}`.padStart(2, '0');
     const tot = `${filaAtual.length}`.padStart(2, '0');
     playerContador.textContent = `${pos} / ${tot}`;
     carregarCapaPlayer(m);
-    miniTitulo.textContent = m.nome;
-    miniArtista.textContent = m.artista;
+    miniTitulo.textContent = obterNomeEfetivo(m);
+    miniArtista.textContent = obterArtistaEfetivo(m);
     atualizarMiniCapa(m);
     renderizarFilaSeAberto();
+    atualizarCoracaoFav(m.id);
+    if (letrasPainel.classList.contains('aberto')) carregarLetraDaMusica(m);
+
+    // Media Session: metadados + handlers
+    atualizarMediaSession(m);
+    configurarHandlersMediaSession();
+    atualizarEstadoMediaSession();
 }
 
 function atualizarDestaqueLista() {
@@ -1677,14 +4351,95 @@ function atualizarDestaqueLista() {
     });
 }
 
-/* ============ CAPA ============ */
+/* ============ CORAÇÃO DE FAVORITO ============ */
+function atualizarCoracaoFav(musicaId) {
+    const ehFav = listaReproducao.includes(musicaId);
+
+    if (btnFavPlayer) {
+        btnFavPlayer.classList.toggle('ativo', ehFav);
+        const icone = btnFavPlayer.querySelector('i');
+        icone.className = ehFav ? 'fa fa-heart' : 'fa fa-heart-o';
+    }
+
+    if (miniBtnFav && filaAtual[indiceFila] && filaAtual[indiceFila].id === musicaId) {
+        miniBtnFav.classList.toggle('ativo', ehFav);
+        const icone = miniBtnFav.querySelector('i');
+        icone.className = ehFav ? 'fa fa-heart' : 'fa fa-heart-o';
+    }
+}
+
+function sincronizarCoracoesNaLista() {
+    bibConteudo.querySelectorAll('.musica-btn-fav').forEach(btn => {
+        const id = btn.dataset.fav;
+        if (!id) return;
+        const ehFav = listaReproducao.includes(id);
+        btn.classList.toggle('ativo', ehFav);
+        const icone = btn.querySelector('i');
+        icone.className = ehFav ? 'fa fa-heart' : 'fa fa-heart-o';
+    });
+}
+
+function alternarFavorito(musicaId, botaoClicado = null) {
+    const eraFav = listaReproducao.includes(musicaId);
+    if (eraFav) {
+        listaReproducao = listaReproducao.filter(x => x !== musicaId);
+    } else {
+        listaReproducao.push(musicaId);
+    }
+    salvarMeta('lista', listaReproducao);
+
+    atualizarCoracaoFav(musicaId);
+    sincronizarCoracoesNaLista();
+
+    if (botaoClicado) {
+        botaoClicado.classList.remove('coracao-pump');
+        void botaoClicado.offsetWidth;
+        botaoClicado.classList.add('coracao-pump');
+        setTimeout(() => botaoClicado.classList.remove('coracao-pump'), 500);
+    } else if (btnFavPlayer) {
+        btnFavPlayer.classList.remove('coracao-pump');
+        void btnFavPlayer.offsetWidth;
+        btnFavPlayer.classList.add('coracao-pump');
+        setTimeout(() => btnFavPlayer.classList.remove('coracao-pump'), 500);
+    }
+
+    if (abaAtiva === 'lista') renderizarBiblioteca();
+}
+
+if (btnFavPlayer) {
+    btnFavPlayer.addEventListener('click', e => {
+        e.stopPropagation();
+        if (indiceFila < 0) return;
+        alternarFavorito(filaAtual[indiceFila].id, btnFavPlayer);
+    });
+}
+if (miniBtnFav) {
+    miniBtnFav.addEventListener('click', e => {
+        e.stopPropagation();
+        if (indiceFila < 0) return;
+        alternarFavorito(filaAtual[indiceFila].id, miniBtnFav);
+    });
+}
+
+/* ============ CAPA (com persistência) ============ */
 function carregarCapaPlayer(musica) {
+    const capaManual = obterCapaEfetiva(musica);
     if (urlCapaAtual) { URL.revokeObjectURL(urlCapaAtual); urlCapaAtual = null; }
+
+    if (capaManual) {
+        cartaoCapa.style.backgroundImage = `url(${capaManual})`;
+        cartaoCapa.classList.remove('sem-capa');
+        return;
+    }
+    if (musica.capaRemovida) {
+        cartaoCapa.style.backgroundImage = '';
+        cartaoCapa.classList.add('sem-capa');
+        return;
+    }
     cartaoCapa.style.backgroundImage = 'none';
     cartaoCapa.classList.add('sem-capa');
 
     const idEsperado = musica.id;
-
     if (musica.capa) {
         cartaoCapa.style.backgroundImage = `url(${musica.capa})`;
         cartaoCapa.classList.remove('sem-capa');
@@ -1699,6 +4454,17 @@ function carregarCapaPlayer(musica) {
 }
 
 function atualizarMiniCapa(musica) {
+    const capaManual = obterCapaEfetiva(musica);
+    if (capaManual) {
+        miniCapa.style.backgroundImage = `url(${capaManual})`;
+        miniCapa.innerHTML = '';
+        return;
+    }
+    if (musica.capaRemovida) {
+        miniCapa.style.backgroundImage = '';
+        miniCapa.innerHTML = '<i class="fa fa-music"></i>';
+        return;
+    }
     if (musica.capa) {
         miniCapa.style.backgroundImage = `url(${musica.capa})`;
         miniCapa.innerHTML = '';
@@ -1716,6 +4482,13 @@ function atualizarMiniCapa(musica) {
 }
 
 function carregarCapaMusica(musica, el) {
+    const capaManual = obterCapaEfetiva(musica);
+    if (capaManual) {
+        el.style.backgroundImage = `url(${capaManual})`;
+        el.innerHTML = '';
+        return;
+    }
+    if (musica.capaRemovida) return;
     if (musica.capa) {
         el.style.backgroundImage = `url(${musica.capa})`;
         el.innerHTML = '';
@@ -1732,6 +4505,29 @@ function carregarCapaMusica(musica, el) {
             alvo.innerHTML = '';
         }
     });
+}
+
+function aplicarEGuardarCapa(musica, blob, callback) {
+    musica.capaBlob = blob;
+    musica.capa = URL.createObjectURL(blob);
+    callback(musica.capa);
+
+    if (db) {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (dados) {
+                    dados.capaBlob = blob;
+                    store.put(dados);
+                }
+            };
+        } catch (e) {
+            console.warn('Falha ao guardar capa no DB:', e);
+        }
+    }
 }
 
 function extrairCapa(musica, callback) {
@@ -1754,32 +4550,6 @@ function extrairCapa(musica, callback) {
     });
 }
 
-// Aplica a capa à UI E guarda o Blob no IndexedDB (sem bloquear)
-function aplicarEGuardarCapa(musica, blob, callback) {
-    musica.capaBlob = blob;
-    musica.capa = URL.createObjectURL(blob);
-    callback(musica.capa);
-
-    // Persiste no IndexedDB em segundo plano
-    if (db) {
-        try {
-            const tx = db.transaction(['musicas'], 'readwrite');
-            const store = tx.objectStore('musicas');
-            const req = store.get(musica.id);
-            req.onsuccess = () => {
-                const dados = req.result;
-                if (dados) {
-                    dados.capaBlob = blob;
-                    store.put(dados);
-                }
-            };
-        } catch (e) {
-            console.warn('Falha ao guardar capa no DB:', e);
-        }
-    }
-  }
-
-  
 function extrairCapaScanner(musica, callback) {
     const leitor = new FileReader();
     leitor.onload = e => {
@@ -1791,11 +4561,11 @@ function extrairCapaScanner(musica, callback) {
                     if (dados[j] === 0xFF && dados[j+1] === 0xD9) {
                         const tamanho = j - i + 2;
                         if (tamanho > 3000) {
-    try {
-        const blob = new Blob([dados.slice(i, j + 2)], { type: 'image/jpeg' });
-        aplicarEGuardarCapa(musica, blob, callback);
-        return;
-    } catch (err) { /* continua */ }
+                            try {
+                                const blob = new Blob([dados.slice(i, j + 2)], { type: 'image/jpeg' });
+                                aplicarEGuardarCapa(musica, blob, callback);
+                                return;
+                            } catch (err) { /* continua */ }
                         }
                     }
                 }
@@ -1806,13 +4576,13 @@ function extrairCapaScanner(musica, callback) {
             if (dados[i] === 0x89 && dados[i+1] === 0x50 && dados[i+2] === 0x4E && dados[i+3] === 0x47) {
                 for (let j = i + 4; j < dados.length - 8; j++) {
                     if (dados[j] === 0x49 && dados[j+1] === 0x45 && dados[j+2] === 0x4E &&
-    dados[j+3] === 0x44 && dados[j+4] === 0xAE && dados[j+5] === 0x42 &&
-    dados[j+6] === 0x60 && dados[j+7] === 0x82) {
-    try {
-        const blob = new Blob([dados.slice(i, j + 8)], { type: 'image/png' });
-        aplicarEGuardarCapa(musica, blob, callback);
-        return;
-    } catch (err) { /* continua */ }
+                        dados[j+3] === 0x44 && dados[j+4] === 0xAE && dados[j+5] === 0x42 &&
+                        dados[j+6] === 0x60 && dados[j+7] === 0x82) {
+                        try {
+                            const blob = new Blob([dados.slice(i, j + 8)], { type: 'image/png' });
+                            aplicarEGuardarCapa(musica, blob, callback);
+                            return;
+                        } catch (err) { /* continua */ }
                     }
                 }
             }
@@ -1823,6 +4593,195 @@ function extrairCapaScanner(musica, callback) {
     };
     leitor.onerror = () => { musica.capa = null; callback(null); };
     leitor.readAsArrayBuffer(musica.arquivo);
+}
+
+/* ============ EDITAR METADADOS ============ */
+function abrirEditarMeta(musica) {
+    musicaEditando = musica;
+    capaTemporariaBlob = null;
+    capaTemporariaUrl = null;
+    removerCapaFlag = false;
+
+    editTitulo.value = musica.nomeEditado || musica.nome || '';
+    editArtista.value = musica.artistaEditado || (musica.artista !== 'Desconhecido' ? musica.artista : '');
+
+    const capaAtual = obterCapaEfetiva(musica);
+    if (capaAtual) {
+        editCapaPreview.style.backgroundImage = `url(${capaAtual})`;
+        editCapaPreview.innerHTML = '';
+        btnRemoverCapa.style.display = 'flex';
+    } else {
+        editCapaPreview.style.backgroundImage = '';
+        editCapaPreview.innerHTML = '<i class="fa fa-music"></i>';
+        btnRemoverCapa.style.display = 'none';
+    }
+
+    modalEditarMeta.classList.add('aberto');
+}
+
+function fecharEditarMeta() {
+    modalEditarMeta.classList.remove('aberto');
+    musicaEditando = null;
+    if (capaTemporariaUrl) { URL.revokeObjectURL(capaTemporariaUrl); capaTemporariaUrl = null; }
+    capaTemporariaBlob = null;
+    removerCapaFlag = false;
+}
+
+btnEscolherCapa.addEventListener('click', () => inputCapaManual.click());
+
+inputCapaManual.addEventListener('change', e => {
+    const ficheiro = e.target.files[0];
+    if (!ficheiro) return;
+    capaTemporariaBlob = ficheiro;
+    if (capaTemporariaUrl) URL.revokeObjectURL(capaTemporariaUrl);
+    capaTemporariaUrl = URL.createObjectURL(ficheiro);
+
+    editCapaPreview.style.backgroundImage = `url(${capaTemporariaUrl})`;
+    editCapaPreview.innerHTML = '';
+    btnRemoverCapa.style.display = 'flex';
+    removerCapaFlag = false;
+    inputCapaManual.value = '';
+});
+
+btnRemoverCapa.addEventListener('click', () => {
+    if (capaTemporariaUrl) { URL.revokeObjectURL(capaTemporariaUrl); capaTemporariaUrl = null; }
+    capaTemporariaBlob = null;
+    removerCapaFlag = true;
+    editCapaPreview.style.backgroundImage = '';
+    editCapaPreview.innerHTML = '<i class="fa fa-music"></i>';
+    btnRemoverCapa.style.display = 'none';
+});
+
+btnCancelarMeta.addEventListener('click', fecharEditarMeta);
+modalEditarMeta.addEventListener('click', e => {
+    if (e.target === modalEditarMeta) fecharEditarMeta();
+});
+
+btnGuardarMeta.addEventListener('click', async () => {
+    if (!musicaEditando) return;
+
+    const novoNome = editTitulo.value.trim();
+    const novoArtista = editArtista.value.trim();
+
+    if (novoNome && novoNome !== musicaEditando.nome) {
+        musicaEditando.nomeEditado = novoNome;
+    } else {
+        delete musicaEditando.nomeEditado;
+    }
+
+    if (novoArtista && novoArtista !== 'Desconhecido') {
+        musicaEditando.artistaEditado = novoArtista;
+    } else {
+        delete musicaEditando.artistaEditado;
+    }
+
+    if (capaTemporariaBlob) {
+        musicaEditando.capaManualBlob = capaTemporariaBlob;
+        if (musicaEditando.capaManualUrl) URL.revokeObjectURL(musicaEditando.capaManualUrl);
+        musicaEditando.capaManualUrl = URL.createObjectURL(capaTemporariaBlob);
+    }
+    if (removerCapaFlag) {
+        if (musicaEditando.capaManualUrl) URL.revokeObjectURL(musicaEditando.capaManualUrl);
+        musicaEditando.capaManualBlob = null;
+        musicaEditando.capaManualUrl = null;
+        musicaEditando.capaRemovida = true;
+    } else if (capaTemporariaBlob) {
+        delete musicaEditando.capaRemovida;
+    }
+
+    await persistirMetadados(musicaEditando);
+    atualizarNomeNaUI(musicaEditando);
+
+    // Atualiza também a Media Session, se esta música estiver a tocar
+    if (filaAtual[indiceFila] && filaAtual[indiceFila].id === musicaEditando.id) {
+        atualizarMediaSession(musicaEditando);
+    }
+
+    fecharEditarMeta();
+});
+
+async function persistirMetadados(musica) {
+    if (!db) return;
+    return new Promise((resolve, reject) => {
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const store = tx.objectStore('musicas');
+            const req = store.get(musica.id);
+            req.onsuccess = () => {
+                const dados = req.result;
+                if (!dados) return resolve();
+
+                if (musica.nomeEditado) dados.nomeEditado = musica.nomeEditado;
+                else delete dados.nomeEditado;
+
+                if (musica.artistaEditado) dados.artistaEditado = musica.artistaEditado;
+                else delete dados.artistaEditado;
+
+                if (musica.capaManualBlob) dados.capaManualBlob = musica.capaManualBlob;
+                else delete dados.capaManualBlob;
+
+                if (musica.capaRemovida) dados.capaRemovida = true;
+                else delete dados.capaRemovida;
+
+                store.put(dados);
+                resolve();
+            };
+            req.onerror = () => reject(req.error);
+        } catch (e) {
+            console.warn('Erro a persistir metadados:', e);
+            resolve();
+        }
+    });
+}
+
+function atualizarNomeNaUI(musica) {
+    const item = bibConteudo.querySelector(`.musica-item[data-id="${CSS.escape(musica.id)}"]`);
+    if (item) {
+        const tituloEl = item.querySelector('.musica-titulo');
+        const infoEl = item.querySelector('.musica-info');
+        if (tituloEl) tituloEl.textContent = obterNomeEfetivo(musica);
+        if (infoEl) {
+            const pasta = musica.pasta && musica.pasta !== 'Raiz' ? ' · ' + musica.pasta : '';
+            infoEl.textContent = obterArtistaEfetivo(musica) + pasta;
+        }
+        const capaEl = item.querySelector('.musica-capa');
+        const capa = obterCapaEfetiva(musica);
+        if (capaEl) {
+            if (capa) {
+                capaEl.style.backgroundImage = `url(${capa})`;
+                capaEl.innerHTML = '';
+            } else {
+                capaEl.style.backgroundImage = '';
+                capaEl.innerHTML = '<i class="fa fa-music"></i>';
+            }
+        }
+    }
+
+    if (filaAtual[indiceFila] && filaAtual[indiceFila].id === musica.id) {
+        atualizarTitulo(obterNomeEfetivo(musica));
+        artistaAtual.textContent = obterArtistaEfetivo(musica);
+
+        const capa = obterCapaEfetiva(musica);
+        if (capa) {
+            cartaoCapa.style.backgroundImage = `url(${capa})`;
+            cartaoCapa.classList.remove('sem-capa');
+        } else {
+            cartaoCapa.style.backgroundImage = '';
+            cartaoCapa.classList.add('sem-capa');
+        }
+
+        miniTitulo.textContent = obterNomeEfetivo(musica);
+        miniArtista.textContent = obterArtistaEfetivo(musica);
+        if (capa) {
+            miniCapa.style.backgroundImage = `url(${capa})`;
+            miniCapa.innerHTML = '';
+        } else {
+            miniCapa.style.backgroundImage = '';
+            miniCapa.innerHTML = '<i class="fa fa-music"></i>';
+        }
+    }
+
+    renderizarFilaSeAberto();
 }
 
 /* ============ TÍTULO MARQUEE ============ */
@@ -1884,16 +4843,26 @@ btnPlayPause.addEventListener('click', () => {
 reprodutor.addEventListener('play', () => {
     btnPlayPause.innerHTML = '<i class="fa fa-pause"></i>';
     miniBtnPlayPause.innerHTML = '<i class="fa fa-pause"></i>';
+    obterOuCriarContextoEQ();
+    reprodutor.playbackRate = velocidadeAtual;
+    tocouMaisDe10s = false;
+    atualizarEstadoMediaSession();
 });
 reprodutor.addEventListener('pause', () => {
     btnPlayPause.innerHTML = '<i class="fa fa-play"></i>';
     miniBtnPlayPause.innerHTML = '<i class="fa fa-play"></i>';
+    atualizarEstadoMediaSession();
 });
 
 btnAnterior.addEventListener('click', () => musicaAnterior());
 btnProximo.addEventListener('click', () => proximaMusica());
 
 reprodutor.addEventListener('ended', () => {
+    if (sleepModoFimFaixa) {
+        limparSleep();
+        mostrarToast('🌙 Temporizador: reprodução pausada');
+        return;
+    }
     if (repetirAtivo) {
         reprodutor.currentTime = 0;
         reprodutor.play().catch(() => {});
@@ -1968,9 +4937,21 @@ reprodutor.addEventListener('timeupdate', () => {
         tempoAtualEl.textContent = formatarTempo(reprodutor.currentTime);
         tempoTotalEl.textContent = formatarTempo(reprodutor.duration);
     }
+    atualizarLinhaAtiva();
+
+    if (!tocouMaisDe10s && reprodutor.currentTime >= 10 && indiceFila >= 0) {
+        tocouMaisDe10s = true;
+        registarPlay(filaAtual[indiceFila].id);
+    }
+
+    // Atualiza a posição na Media Session (a cada ~5 segundos para não sobrecarregar)
+    if (Math.floor(reprodutor.currentTime) % 5 === 0) {
+        atualizarEstadoMediaSession();
+    }
 });
 reprodutor.addEventListener('loadedmetadata', () => {
     tempoTotalEl.textContent = formatarTempo(reprodutor.duration);
+    atualizarEstadoMediaSession();
 });
 
 progressoTrilha.addEventListener('click', e => {
@@ -1988,7 +4969,7 @@ function formatarTempo(s) {
     return `${m}:${seg.toString().padStart(2, '0')}`;
 }
 
-/* ============ SWIPE CLÁSSICO ============ */
+/* ============ SWIPE ============ */
 (function configurarSwipe() {
     let startX = 0, startY = 0, curX = 0;
     let tracking = false, horizontal = null;
@@ -2043,7 +5024,7 @@ function formatarTempo(s) {
     cartao.addEventListener('touchcancel', onUp);
 
     cartao.addEventListener('mousedown', e => {
-        if (e.target.closest('.cartao-progresso')) return;
+        if (e.target.closest('.cartao-progresso') || e.target.closest('.cartao-fav')) return;
         e.preventDefault();
         onDown(e.clientX, e.clientY);
     });
@@ -2062,24 +5043,6 @@ bibAbas.forEach(aba => {
     });
 });
 
-/* ============ ADICIONAR MAIS MÚSICAS ============ */
-const btnAdicionarMais = document.getElementById('btnAdicionarMais');
-
-btnAdicionarMais.addEventListener('click', async () => {
-    // Tenta a File System Access API primeiro (Android/desktop)
-    if ('showDirectoryPicker' in window) {
-        try {
-            const dirHandle = await window.showDirectoryPicker();
-            await processarDiretorioFS(dirHandle);
-            return;
-        } catch (err) {
-            if (err.name === 'AbortError') return;
-            console.warn('FS API falhou, usando fallback:', err);
-        }
-    }
-    // Fallback: input de pasta (iOS e outros)
-    inputPasta.click();
-});
 /* ============ BUSCA ============ */
 btnBusca.addEventListener('click', () => {
     buscaWrap.classList.toggle('aberto');
@@ -2094,6 +5057,12 @@ buscaInput.addEventListener('input', e => {
 /* ============ TEMA ============ */
 btnTema.addEventListener('click', () => irParaTela('temas'));
 btnVoltarTemas.addEventListener('click', () => irParaTela('biblioteca'));
+
+btnEstatisticas.addEventListener('click', () => {
+    renderizarEstatisticas();
+    irParaTela('estatisticas');
+});
+btnVoltarEstat.addEventListener('click', () => irParaTela('biblioteca'));
 
 /* ============ PAINEL DA FILA ============ */
 function abrirFila() {
@@ -2125,19 +5094,21 @@ function renderizarFila() {
         item.className = 'fila-item';
         if (i === indiceFila) item.classList.add('fila-item-ativa');
 
+        const capaEfetiva = obterCapaEfetiva(m);
+
         item.innerHTML = `
             <div class="fila-item-numero">${(i + 1).toString().padStart(2, '0')}</div>
-            <div class="fila-item-capa" ${m.capa ? `style="background-image:url(${m.capa})"` : ''}>
-                ${m.capa ? '' : '<i class="fa fa-music"></i>'}
+            <div class="fila-item-capa" ${capaEfetiva ? `style="background-image:url(${capaEfetiva})"` : ''}>
+                ${capaEfetiva ? '' : '<i class="fa fa-music"></i>'}
             </div>
             <div class="fila-item-meta">
-                <div class="fila-item-titulo">${escapeHtml(m.nome)}</div>
-                <div class="fila-item-artista">${escapeHtml(m.artista)}</div>
+                <div class="fila-item-titulo">${escapeHtml(obterNomeEfetivo(m))}</div>
+                <div class="fila-item-artista">${escapeHtml(obterArtistaEfetivo(m))}</div>
             </div>
             ${i === indiceFila ? '<i class="fa fa-volume-up" style="color:var(--cor-destaque);font-size:13px"></i>' : ''}
         `;
 
-        if (!m.capa) {
+        if (!capaEfetiva && !m.capaRemovida) {
             extrairCapa(m, url => {
                 if (!url) return;
                 const capaEl = item.querySelector('.fila-item-capa');
@@ -2173,13 +5144,130 @@ btnMenuFila.addEventListener('click', abrirFila);
 btnFecharFila.addEventListener('click', fecharFila);
 filaOverlay.addEventListener('click', fecharFila);
 
+/* ============ SLEEP TIMER ============ */
+const toastAviso = document.createElement('div');
+toastAviso.className = 'toast-aviso';
+document.body.appendChild(toastAviso);
+let toastTimeout = null;
+function mostrarToast(msg) {
+    toastAviso.innerHTML = '';
+    toastAviso.textContent = msg;
+    toastAviso.classList.add('visivel');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => toastAviso.classList.remove('visivel'), 3000);
+}
+
+function mostrarToastComAcao(msg, textoBotao, callback) {
+    toastAviso.innerHTML = '';
+    const span = document.createElement('span');
+    span.textContent = msg;
+    const btn = document.createElement('button');
+    btn.className = 'toast-btn-acao';
+    btn.textContent = textoBotao;
+    btn.addEventListener('click', e => {
+        e.stopPropagation();
+        callback();
+        toastAviso.classList.remove('visivel');
+    });
+    toastAviso.appendChild(span);
+    toastAviso.appendChild(btn);
+    toastAviso.classList.add('visivel');
+    clearTimeout(toastTimeout);
+    toastTimeout = setTimeout(() => {
+        toastAviso.classList.remove('visivel');
+        setTimeout(() => { toastAviso.innerHTML = ''; }, 300);
+    }, 4000);
+}
+
+function abrirSleep() {
+    sleepInfo.textContent = (sleepTimeoutId || sleepModoFimFaixa)
+        ? 'Temporizador já está ativo. Escolha outro ou desligue.'
+        : 'A reprodução irá parar automaticamente.';
+    btnDesligarSleep.classList.toggle('escondido', !(sleepTimeoutId || sleepModoFimFaixa));
+    modalSleep.classList.add('aberto');
+}
+
+function fecharSleep() {
+    modalSleep.classList.remove('aberto');
+}
+
+function limparSleep() {
+    if (sleepTimeoutId) { clearTimeout(sleepTimeoutId); sleepTimeoutId = null; }
+    if (sleepIntervalId) { clearInterval(sleepIntervalId); sleepIntervalId = null; }
+    sleepFim = 0;
+    sleepModoFimFaixa = false;
+    btnSleepTimer.classList.remove('ativo');
+    sleepBadge.textContent = '';
+}
+
+function dispararSleep() {
+    reprodutor.pause();
+    limparSleep();
+    mostrarToast('🌙 Temporizador: reprodução pausada');
+}
+
+function definirSleep(minutos) {
+    limparSleep();
+    const ms = minutos * 60 * 1000;
+    sleepFim = Date.now() + ms;
+    sleepTimeoutId = setTimeout(dispararSleep, ms);
+
+    sleepIntervalId = setInterval(() => {
+        const restante = Math.max(0, sleepFim - Date.now());
+        const totalMin = Math.ceil(restante / 60000);
+        if (restante <= 0) { sleepBadge.textContent = '0'; return; }
+        if (totalMin >= 60) sleepBadge.textContent = Math.floor(totalMin / 60) + 'h';
+        else sleepBadge.textContent = totalMin + 'm';
+    }, 1000);
+
+    sleepBadge.textContent = minutos + 'm';
+    btnSleepTimer.classList.add('ativo');
+    fecharSleep();
+    mostrarToast(`🌙 Temporizador: ${minutos} min`);
+}
+
+function definirSleepFimFaixa() {
+    limparSleep();
+    sleepModoFimFaixa = true;
+    btnSleepTimer.classList.add('ativo');
+    sleepBadge.textContent = '▶';
+    fecharSleep();
+    mostrarToast('🌙 Pausa no fim da faixa atual');
+}
+
+btnSleepTimer.addEventListener('click', abrirSleep);
+btnFecharSleep.addEventListener('click', fecharSleep);
+modalSleep.addEventListener('click', e => {
+    if (e.target === modalSleep) fecharSleep();
+});
+
+document.querySelectorAll('[data-sleep]').forEach(btn => {
+    btn.addEventListener('click', () => {
+        const v = btn.dataset.sleep;
+        if (v === 'off') { limparSleep(); fecharSleep(); mostrarToast('🌙 Temporizador desligado'); return; }
+        if (v === 'fim') { definirSleepFimFaixa(); return; }
+        definirSleep(parseInt(v, 10));
+    });
+});
+
 /* ============ MENU DE MÚSICA ============ */
 function abrirMenuMusica(m) {
     musicaMenuAlvo = m;
-    menuMusicaTitulo.textContent = m.nome;
-    menuMusicaArtista.textContent = m.artista;
+    menuMusicaTitulo.textContent = obterNomeEfetivo(m);
+    menuMusicaArtista.textContent = obterArtistaEfetivo(m);
     const naLista = listaReproducao.includes(m.id);
     menuAddListaTexto.textContent = naLista ? 'Remover da Lista de reprodução' : 'Adicionar à Lista de reprodução';
+
+    document.getElementById('menuAdicionarLista').style.display = '';
+    document.getElementById('menuEnviarMusica').style.display = '';
+    document.getElementById('menuEditarMeta').style.display = '';
+    menuSelecionarMulti.style.display = '';
+
+    const btnRemover = document.getElementById('menuRemoverMusica');
+    btnRemover.querySelector('div > div').textContent = 'Remover da biblioteca';
+    btnRemover.querySelector('.modal-acao-sub').textContent = 'O ficheiro original não é apagado';
+    btnRemover.style.display = '';
+
     modalMenuMusica.classList.add('aberto');
 }
 
@@ -2190,12 +5278,15 @@ modalMenuMusica.addEventListener('click', e => {
 
 menuAdicionarLista.addEventListener('click', () => {
     if (!musicaMenuAlvo) return;
-    const id = musicaMenuAlvo.id;
-    if (listaReproducao.includes(id)) listaReproducao = listaReproducao.filter(x => x !== id);
-    else listaReproducao.push(id);
-    salvarMeta('lista', listaReproducao);
+    alternarFavorito(musicaMenuAlvo.id);
     modalMenuMusica.classList.remove('aberto');
-    if (abaAtiva === 'lista') renderizarBiblioteca();
+});
+
+menuEnviarMusica.addEventListener('click', async () => {
+    if (!musicaMenuAlvo) return;
+    const musica = musicaMenuAlvo;
+    modalMenuMusica.classList.remove('aberto');
+    await enviarMusica(musica);
 });
 
 menuSelecionarMulti.addEventListener('click', () => {
@@ -2207,6 +5298,26 @@ menuSelecionarMulti.addEventListener('click', () => {
     }
     atualizarBarraSelecao();
     renderizarBiblioteca();
+});
+
+document.getElementById('menuEditarMeta').addEventListener('click', () => {
+    if (!musicaMenuAlvo) return;
+    const alvo = musicaMenuAlvo;
+    modalMenuMusica.classList.remove('aberto');
+    setTimeout(() => abrirEditarMeta(alvo), 200);
+});
+
+document.getElementById('menuRemoverMusica').addEventListener('click', () => {
+    if (!musicaMenuAlvo) return;
+    const id = musicaMenuAlvo.id;
+    const eraRemovida = musicaMenuAlvo.removida;
+    modalMenuMusica.classList.remove('aberto');
+
+    if (eraRemovida) {
+        eliminarDefinitivamente([id]);
+    } else {
+        removerMusicas([id]);
+    }
 });
 
 /* ============ SELEÇÃO MÚLTIPLA ============ */
@@ -2228,6 +5339,36 @@ function atualizarBarraSelecao() {
     }
     barraSelecao.classList.add('visivel');
     selecaoInfo.textContent = `${idsSelecionados.size} selecionada(s)`;
+
+    const btnRem = document.getElementById('btnRemoverSelecao');
+    const btnLista = document.getElementById('btnAdicionarLista');
+    let btnRestaurarSel = document.getElementById('btnRestaurarSelecao');
+
+    if (abaAtiva === 'removidas') {
+        if (!btnRestaurarSel) {
+            const btn = document.createElement('button');
+            btn.className = 'barra-selecao-btn';
+            btn.id = 'btnRestaurarSelecao';
+            btn.innerHTML = '<i class="fa fa-undo"></i> Restaurar';
+            btn.addEventListener('click', () => {
+                if (idsSelecionados.size === 0) return;
+                const ids = Array.from(idsSelecionados);
+                modoSelecao = false;
+                idsSelecionados.clear();
+                barraSelecao.classList.remove('visivel');
+                restaurarMusicas(ids);
+            });
+            btnRem.parentNode.insertBefore(btn, btnRem);
+        } else {
+            btnRestaurarSel.style.display = '';
+        }
+        btnLista.style.display = 'none';
+        btnRem.title = 'Eliminar definitivamente';
+    } else {
+        if (btnRestaurarSel) btnRestaurarSel.style.display = 'none';
+        btnLista.style.display = '';
+        btnRem.title = 'Remover';
+    }
 }
 
 btnCancelarSel.addEventListener('click', () => {
@@ -2235,6 +5376,21 @@ btnCancelarSel.addEventListener('click', () => {
     idsSelecionados.clear();
     barraSelecao.classList.remove('visivel');
     renderizarBiblioteca();
+});
+
+document.getElementById('btnRemoverSelecao').addEventListener('click', () => {
+    if (idsSelecionados.size === 0) return;
+    const ids = Array.from(idsSelecionados);
+    const noLixeira = abaAtiva === 'removidas';
+    modoSelecao = false;
+    idsSelecionados.clear();
+    barraSelecao.classList.remove('visivel');
+
+    if (noLixeira) {
+        eliminarDefinitivamente(ids);
+    } else {
+        removerMusicas(ids);
+    }
 });
 
 btnAdicionarLista.addEventListener('click', () => {
@@ -2269,15 +5425,22 @@ document.addEventListener('touchend', () => sliderVolumeDragging = false);
 
 /* ============ ATALHOS TECLADO ============ */
 document.addEventListener('keydown', e => {
-    if (e.target.tagName === 'INPUT') return;
+    if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
     if (e.key === ' ') { e.preventDefault(); btnPlayPause.click(); }
     if (e.key === 'ArrowRight') proximaMusica();
     if (e.key === 'ArrowLeft') musicaAnterior();
     if (e.key === 'Escape') {
         modalMenuMusica.classList.remove('aberto');
         modalPermissao.classList.remove('aberto');
+        modalSleep.classList.remove('aberto');
+        modalEditarMeta.classList.remove('aberto');
+        modalEditarLetra.classList.remove('aberto');
+        modalVelocidade.classList.remove('aberto');
+        modalBackup.classList.remove('aberto');
         fecharFila();
-        if (telaAtual === 'temas') irParaTela('biblioteca');
+        fecharLetras();
+        fecharEQ();
+        if (telaAtual === 'temas' || telaAtual === 'estatisticas') irParaTela('biblioteca');
     }
 });
 </script>
