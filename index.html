@@ -2583,6 +2583,8 @@ function carregarMusicasDB() {
                 musica.capaManualBlob = item.capaManualBlob;
                 musica.capaManualUrl = URL.createObjectURL(item.capaManualBlob);
             }
+            if (item.tituloTag) musica.tituloTag = item.tituloTag;
+            if (item.tagsLidas) musica.tagsLidas = true;
             if (item.capaRemovida) musica.capaRemovida = true;
             if (item.letraManual) musica.letraManual = item.letraManual;
             if (item.removida) musica.removida = true;
@@ -2646,6 +2648,8 @@ window.addEventListener('load', async () => {
             reconstruirPastas();
             irParaTela('biblioteca');
             renderizarBiblioteca();
+            await restaurarSessao();
+            agendarLeituraTags();
         }
     } catch (e) { console.error('Erro DB:', e); }
 
@@ -2774,6 +2778,7 @@ function finalizarImportacao() {
     reconstruirPastas();
     irParaTela('biblioteca');
     renderizarBiblioteca();
+    agendarLeituraTags();
 }
 
 function reconstruirPastas() {
@@ -2792,7 +2797,7 @@ function obterMusicasAtivas() {
 
 /* ============ METADADOS EFETIVOS ============ */
 function obterNomeEfetivo(m) {
-    return m.nomeEditado || m.nome;
+    return m.nomeEditado || m.tituloTag || m.nome;
 }
 
 function obterArtistaEfetivo(m) {
@@ -3088,6 +3093,9 @@ function obterOuCriarContextoEQ() {
     try {
         const Ctx = window.AudioContext || window.webkitAudioContext;
         contextoEQ = new Ctx();
+        contextoEQ.onstatechange = () => {
+            if (contextoEQ.state !== 'running' && !reprodutor.paused) contextoEQ.resume().catch(() => {});
+        };
 
         const fonte = contextoEQ.createMediaElementSource(reprodutor);
         let noAnterior = fonte;
@@ -4313,6 +4321,143 @@ function escapeHtml(s) {
     return String(s).replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
 }
 
+
+/* ============ TAGS (artista, título, capa) EM SEGUNDO PLANO ============ */
+const filaTags = [];
+let lendoTags = false;
+
+function agendarLeituraTags() {
+    musicas.forEach(m => {
+        if (!m.tagsLidas && !m._tagsNaFila) { m._tagsNaFila = true; filaTags.push(m); }
+    });
+    if (!lendoTags && filaTags.length) processarFilaTags();
+}
+
+function refrescarBiblioteca() {
+    if (telaAtual !== 'biblioteca' || modoSelecao) return;
+    const topo = bibConteudo.scrollTop;
+    renderizarBiblioteca();
+    bibConteudo.scrollTop = topo;
+}
+
+async function processarFilaTags() {
+    if (typeof jsmediatags === 'undefined') return;
+    lendoTags = true;
+    let alterou = false, n = 0;
+    while (filaTags.length) {
+        const m = filaTags.shift();
+        m._tagsNaFila = false;
+        if (m.tagsLidas) continue;
+        const mudou = await lerTagsMusica(m);
+        if (mudou) alterou = true;
+        m.tagsLidas = true;
+        await persistirTags(m);
+        if (++n % 40 === 0 && alterou) refrescarBiblioteca();
+        await new Promise(r => setTimeout(r, 0));
+    }
+    lendoTags = false;
+    if (alterou) refrescarBiblioteca();
+}
+
+function lerTagsMusica(m) {
+    return new Promise(resolve => {
+        try {
+            jsmediatags.read(m.arquivo, {
+                onSuccess: tag => {
+                    const t = tag.tags || {};
+                    let mudou = false;
+                    const artista = String(t.artist || '').trim();
+                    const titulo = String(t.title || '').trim();
+                    if (artista && (!m.artista || m.artista === 'Desconhecido')) { m.artista = artista; mudou = true; }
+                    if (titulo && !m.tituloTag) { m.tituloTag = titulo; mudou = true; }
+                    const pic = t.picture;
+                    if (pic && pic.data && !m.capa && !m.capaBlob) {
+                        try {
+                            const blob = new Blob([new Uint8Array(pic.data)], { type: pic.format || 'image/jpeg' });
+                            aplicarEGuardarCapa(m, blob, () => {});
+                            mudou = true;
+                        } catch (e) { /* ignora */ }
+                    }
+                    resolve(mudou);
+                },
+                onError: () => resolve(false)
+            });
+        } catch (e) { resolve(false); }
+    });
+}
+
+function persistirTags(m) {
+    return new Promise(resolve => {
+        if (!db) return resolve();
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const st = tx.objectStore('musicas');
+            const rq = st.get(m.id);
+            rq.onsuccess = () => {
+                const d = rq.result;
+                if (!d) return;
+                d.artista = m.artista;
+                if (m.tituloTag) d.tituloTag = m.tituloTag;
+                d.tagsLidas = true;
+                st.put(d);
+            };
+            tx.oncomplete = () => resolve();
+            tx.onerror = tx.onabort = () => resolve();
+        } catch (e) { resolve(); }
+    });
+}
+
+/* ============ RETOMAR SESSÃO (fila + posição) ============ */
+function guardarSessao() {
+    if (indiceFila < 0 || !filaAtual[indiceFila]) return;
+    salvarMeta('sessao', { ids: filaAtual.map(m => m.id), idAtual: filaAtual[indiceFila].id });
+    guardarPosicao();
+}
+
+let ultimoGuardoPos = 0;
+function guardarPosicao() {
+    if (indiceFila < 0 || !filaAtual[indiceFila]) return;
+    try {
+        localStorage.setItem('posicaoAtual', JSON.stringify({
+            id: filaAtual[indiceFila].id, t: reprodutor.currentTime || 0
+        }));
+    } catch (e) { /* ignora */ }
+}
+reprodutor.addEventListener('timeupdate', () => {
+    const agora = Date.now();
+    if (agora - ultimoGuardoPos > 5000) { ultimoGuardoPos = agora; guardarPosicao(); }
+});
+reprodutor.addEventListener('pause', guardarPosicao);
+document.addEventListener('visibilitychange', () => { if (document.hidden) guardarPosicao(); });
+
+async function restaurarSessao() {
+    try {
+        const sessao = await carregarMeta('sessao');
+        if (!sessao || !Array.isArray(sessao.ids)) return;
+        const mapa = new Map(musicas.map(m => [m.id, m]));
+        const fila = sessao.ids.map(id => mapa.get(id)).filter(m => m && !m.removida);
+        const idx = fila.findIndex(m => m.id === sessao.idAtual);
+        if (idx < 0) return;
+
+        let pos = 0;
+        try {
+            const g = JSON.parse(localStorage.getItem('posicaoAtual') || 'null');
+            if (g && g.id === sessao.idAtual && g.t > 0) pos = g.t;
+        } catch (e) { /* ignora */ }
+
+        filaAtual = fila;
+        indiceFila = idx;
+        if (pos > 0) {
+            reprodutor.addEventListener('loadedmetadata', () => {
+                if (pos < reprodutor.duration) reprodutor.currentTime = pos;
+            }, { once: true });
+        }
+        reproduzirAtual(false);
+        mostrarMiniPlayer();
+        atualizarDestaqueLista();
+    } catch (e) { console.warn('Retoma falhou:', e); }
+}
+
 /* ============ TOCAR ============ */
 function tocarDaLista(lista, id, marcarRecente = false) {
     filaAtual = lista.slice();
@@ -4350,6 +4495,7 @@ function reproduzirAtual(autoPlay = true) {
     atualizarMediaSession(m);
     configurarHandlersMediaSession();
     atualizarEstadoMediaSession();
+    guardarSessao();
 }
 
 function atualizarDestaqueLista() {
@@ -4868,7 +5014,8 @@ btnPlayPause.addEventListener('click', () => {
 reprodutor.addEventListener('play', () => {
     btnPlayPause.innerHTML = '<i class="fa fa-pause"></i>';
     miniBtnPlayPause.innerHTML = '<i class="fa fa-pause"></i>';
-    obterOuCriarContextoEQ();
+    // O EQ só entra no caminho do áudio se já foi criado ou se há ajustes guardados
+    if (contextoEQ || valoresEQ.some(v => v !== 0)) obterOuCriarContextoEQ();
     reprodutor.playbackRate = velocidadeAtual;
     tocouMaisDe10s = false;
     atualizarEstadoMediaSession();

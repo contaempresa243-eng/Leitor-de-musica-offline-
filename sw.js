@@ -1,5 +1,5 @@
-// Leitor Offline — Service Worker v39 (GitHub Pages: no-cache evita os 10 min de cache HTTP)
-const CACHE_APP = 'leitor-app-v39';
+// Leitor Offline — Service Worker v40 (GitHub Pages: no-cache evita os 10 min de cache HTTP)
+const CACHE_APP = 'leitor-app-v40';
 const CACHE_CDN = 'leitor-cdn-v1'; // persiste entre versões da app
 const MANTER = [CACHE_APP, CACHE_CDN];
 
