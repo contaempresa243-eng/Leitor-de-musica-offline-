@@ -713,6 +713,13 @@
         flex-shrink: 0;
         display: flex;
         justify-content: center;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .letras-btn.secundario {
+        background: transparent;
+        color: var(--cor-destaque);
+        border: 1.5px solid var(--cor-destaque);
     }
     .letras-btn {
         padding: 10px 20px;
@@ -729,6 +736,7 @@
         transition: transform 0.15s;
     }
     .letras-btn:active { transform: scale(0.96); }
+    .letras-btn:disabled { opacity: 0.6; pointer-events: none; }
 
     .letras-textarea {
         width: 100%;
@@ -1953,7 +1961,10 @@
     </div>
     <div class="letras-conteudo" id="letrasConteudo"></div>
     <div class="letras-acoes" id="letrasAcoes" style="display:none">
-        <button class="letras-btn" id="btnEditarLetra"><i class="fa fa-pencil"></i> Editar letra</button>
+        <button class="letras-btn" id="btnProcurarLetra"><i class="fa fa-search"></i> Procurar online</button>
+        <button class="letras-btn secundario" id="btnEditarLetra"><i class="fa fa-pencil"></i> Editar letra</button>
+        <button class="letras-btn secundario" id="btnImportarLetra"><i class="fa fa-download"></i> Importar .lrc</button>
+        <input type="file" id="inputFicheiroLrc" accept=".lrc,.txt,text/plain" multiple hidden>
     </div>
 </section>
 
@@ -2956,6 +2967,145 @@ btnEditarLetra.addEventListener('click', () => {
     inputLetra.value = m.letraManual || musicasLrc[nomeBaseDoFicheiro(m.nome)] || '';
     modalEditarLetra.classList.add('aberto');
     setTimeout(() => inputLetra.focus(), 300);
+});
+
+/* ---- Procurar letra online (lrclib.net, gratuito) ---- */
+const btnProcurarLetra = document.getElementById('btnProcurarLetra');
+
+function limparTituloParaBusca(t) {
+    return t.replace(/^\s*\d{1,3}\s*[-._)]\s*/, '')
+            .replace(/[\[(][^\])]*[\])]/g, ' ')
+            .replace(/\s+/g, ' ').trim();
+}
+
+function termosDeBusca(m) {
+    const bruto = obterNomeEfetivo(m);
+    let artista = (m.artista && m.artista !== 'Desconhecido') ? m.artista : '';
+    let titulo = bruto;
+    if (!artista) {
+        const i = bruto.indexOf(' - ');
+        if (i > 0) { artista = bruto.slice(0, i).trim(); titulo = bruto.slice(i + 3).trim(); }
+    } else if (titulo.toLowerCase().startsWith(artista.toLowerCase() + ' - ')) {
+        titulo = titulo.slice(artista.length + 3);
+    }
+    titulo = limparTituloParaBusca(titulo) || titulo;
+    return { titulo, artista };
+}
+
+async function pesquisarLrclib(params) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 10000);
+    try {
+        const r = await fetch('https://lrclib.net/api/search?' + new URLSearchParams(params), { signal: ctrl.signal });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        return await r.json();
+    } finally { clearTimeout(t); }
+}
+
+function melhorResultado(lista, duracao) {
+    let validos = (Array.isArray(lista) ? lista : [])
+        .filter(r => r && !r.instrumental && (r.syncedLyrics || r.plainLyrics));
+    if (duracao) {
+        // Duração muito diferente = outra versão; os tempos não bateriam certo
+        validos = validos.filter(r => !r.duration || Math.abs(r.duration - duracao) <= 20);
+    }
+    if (!validos.length) return null;
+    const pontos = r => {
+        let p = r.syncedLyrics ? 100 : 0;
+        if (duracao && r.duration) {
+            const d = Math.abs(r.duration - duracao);
+            p += d <= 3 ? 50 : d <= 8 ? 20 : 0;
+        }
+        return p;
+    };
+    return validos.sort((a, b) => pontos(b) - pontos(a))[0];
+}
+
+btnProcurarLetra.addEventListener('click', async () => {
+    if (indiceFila < 0) return;
+    if (!navigator.onLine) { mostrarToast('Sem internet. Liga os dados ou o Wi-Fi.'); return; }
+    const m = filaAtual[indiceFila];
+    const jaTem = m.letraManual || musicasLrc[nomeBaseDoFicheiro(m.nome)];
+    if (jaTem && !confirm('Já existe uma letra para esta música. Substituir pela encontrada online?')) return;
+
+    const { titulo, artista } = termosDeBusca(m);
+    const duracao = reprodutor.duration && isFinite(reprodutor.duration) ? reprodutor.duration : 0;
+    const textoOriginal = btnProcurarLetra.innerHTML;
+    btnProcurarLetra.disabled = true;
+    btnProcurarLetra.innerHTML = '<i class="fa fa-spinner fa-spin"></i> A procurar…';
+
+    try {
+        let r = null;
+        if (artista) r = melhorResultado(await pesquisarLrclib({ track_name: titulo, artist_name: artista }), duracao);
+        if (!r) r = melhorResultado(await pesquisarLrclib({ q: (titulo + ' ' + artista).trim() }), duracao);
+
+        if (!r) {
+            mostrarToast('Não encontrei letra para esta música');
+        } else {
+            m.letraManual = r.syncedLyrics || r.plainLyrics;
+            await persistirLetraManual(m);
+            if (filaAtual[indiceFila] === m) carregarLetraDaMusica(m);
+            mostrarToast(`${r.artistName} – ${r.trackName} · ${r.syncedLyrics ? 'sincronizada' : 'sem tempos'}`);
+        }
+    } catch (e) {
+        console.warn('Procurar letra falhou:', e);
+        mostrarToast('Não consegui ligar ao serviço de letras');
+    } finally {
+        btnProcurarLetra.disabled = false;
+        btnProcurarLetra.innerHTML = textoOriginal;
+    }
+});
+
+/* ---- Importar letras (.lrc / .txt) ---- */
+const btnImportarLetra = document.getElementById('btnImportarLetra');
+const inputFicheiroLrc = document.getElementById('inputFicheiroLrc');
+
+async function lerTextoFicheiro(f) {
+    const buf = await f.arrayBuffer();
+    try {
+        return new TextDecoder('utf-8', { fatal: true }).decode(buf).replace(/^\uFEFF/, '');
+    } catch (e) {
+        return new TextDecoder('windows-1252').decode(buf); // .lrc antigos com acentos
+    }
+}
+
+btnImportarLetra.addEventListener('click', () => inputFicheiroLrc.click());
+
+inputFicheiroLrc.addEventListener('change', async () => {
+    const ficheiros = Array.from(inputFicheiroLrc.files || []);
+    inputFicheiroLrc.value = '';
+    if (!ficheiros.length || indiceFila < 0) return;
+    const atual = filaAtual[indiceFila];
+    try {
+        if (ficheiros.length === 1) {
+            // Um ficheiro: vai para a música que está a tocar, seja qual for o nome
+            const texto = (await lerTextoFicheiro(ficheiros[0])).trim();
+            if (!texto) { mostrarToast('O ficheiro está vazio'); return; }
+            atual.letraManual = texto;
+            await persistirLetraManual(atual);
+            carregarLetraDaMusica(atual);
+            mostrarToast('Letra importada');
+        } else {
+            // Vários: ligados às músicas pelo nome do ficheiro
+            const nomes = new Set(musicas.map(m => nomeBaseDoFicheiro(m.nome)));
+            let ligadas = 0, semMusica = 0;
+            for (const f of ficheiros) {
+                const texto = (await lerTextoFicheiro(f)).trim();
+                if (!texto) continue;
+                const base = nomeBaseDoFicheiro(f.name);
+                musicasLrc[base] = texto;
+                if (nomes.has(base)) ligadas++; else semMusica++;
+            }
+            salvarMeta('letras', musicasLrc);
+            carregarLetraDaMusica(atual);
+            mostrarToast(semMusica
+                ? `${ligadas} letras importadas · ${semMusica} sem música com o mesmo nome`
+                : `${ligadas} letras importadas`);
+        }
+    } catch (e) {
+        console.warn('Importar letra falhou:', e);
+        mostrarToast('Não foi possível ler o ficheiro');
+    }
 });
 
 btnCancelarLetra.addEventListener('click', () => modalEditarLetra.classList.remove('aberto'));
