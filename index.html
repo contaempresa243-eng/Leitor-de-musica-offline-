@@ -5,11 +5,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Leitor Offline</title>
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0a192f">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
-<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
-<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js"></script>
+<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" crossorigin="anonymous">
+<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js" crossorigin="anonymous"></script>
 <style>
     :root {
         --cor-primaria: #0a192f;
@@ -2551,9 +2551,9 @@ function salvarMusicaDB(m) {
             arquivo: m.arquivo, pasta: m.pasta || ''
         };
         if (m.capaBlob) dados.capaBlob = m.capaBlob;
-        const req = tx.objectStore('musicas').put(dados);
-        req.onsuccess = () => resolve();
-        req.onerror = () => reject(req.error);
+        tx.objectStore('musicas').put(dados);
+        tx.oncomplete = () => resolve();
+        tx.onerror = tx.onabort = () => reject(tx.error);
     });
 }
 
@@ -2608,6 +2608,12 @@ function carregarMeta(chave) {
     });
 }
 
+let falhasGuardar = 0;
+function avisarFalhaGuardar(err) {
+    console.warn('Falha ao guardar música:', err);
+    if (++falhasGuardar === 1) mostrarToast('⚠️ Sem espaço: algumas músicas não ficarão guardadas');
+}
+
 function gerarIdArquivo(arquivo) {
     const rel = arquivo.webkitRelativePath || arquivo.name;
     return `${rel}__${arquivo.size}`;
@@ -2625,6 +2631,9 @@ window.addEventListener('load', async () => {
     aplicarVelocidade();
 
     try {
+        if (navigator.storage && navigator.storage.persist) {
+            navigator.storage.persist().catch(() => {});
+        }
         await abrirDB();
         const salvas = await carregarMusicasDB();
         listaReproducao = (await carregarMeta('lista')) || [];
@@ -2694,7 +2703,7 @@ async function processarDiretorioFS(dirHandle) {
             artista: 'Desconhecido', pasta: pasta || 'Raiz',
             arquivo, url: URL.createObjectURL(arquivo), capa: null, capaBlob: null
         };
-        try { await salvarMusicaDB(musica); } catch (err) { console.warn('Quota', err); }
+        try { await salvarMusicaDB(musica); } catch (err) { avisarFalhaGuardar(err); }
         musicas.push(musica);
     }
 
@@ -2739,7 +2748,7 @@ inputPasta.addEventListener('change', async e => {
             artista: 'Desconhecido', pasta,
             arquivo, url: URL.createObjectURL(arquivo), capa: null, capaBlob: null
         };
-        try { await salvarMusicaDB(musica); } catch (err) { console.warn('Quota', err); }
+        try { await salvarMusicaDB(musica); } catch (err) { avisarFalhaGuardar(err); }
         musicas.push(musica);
     }
 
@@ -3878,7 +3887,7 @@ function renderizarLixeira() {
                 <button class="musica-btn-restaurar" data-restaurar="${m.id}" title="Restaurar">
                     <i class="fa fa-undo"></i>
                 </button>
-                <button class="musica-btn-menu" data-menu="${m.id}"><i class="fa fa-ellipsis-v"></i></button>
+                <button class="musica-btn-menu" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
             ` : ''}
         `;
 
@@ -4180,10 +4189,10 @@ function renderizarListaMusicas(lista, mostrarRecentes = false) {
                 <div class="musica-info">${escapeHtml(artistaEfetivo)}${escapeHtml(pastaInfo)}</div>
             </div>
             ${!modoSelecao ? `
-                <button class="musica-btn-fav ${ehFavorita ? 'ativo' : ''}" data-fav="${m.id}" title="Favorito">
+                <button class="musica-btn-fav ${ehFavorita ? 'ativo' : ''}" data-fav="${escapeHtml(m.id)}" title="Favorito">
                     <i class="fa ${ehFavorita ? 'fa-heart' : 'fa-heart-o'}"></i>
                 </button>
-                <button class="musica-btn-menu" data-menu="${m.id}"><i class="fa fa-ellipsis-v"></i></button>
+                <button class="musica-btn-menu" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
             ` : ''}
         `;
 
@@ -4532,6 +4541,22 @@ function aplicarEGuardarCapa(musica, blob, callback) {
 
 function extrairCapa(musica, callback) {
     if (musica.capa) { callback(musica.capa); return; }
+    if (musica.capaTentada) {
+        if (musica._capaEsperando) musica._capaEsperando.push(callback);
+        else callback(null);
+        return;
+    }
+    musica.capaTentada = true;
+    musica._capaEsperando = [callback];
+    extrairCapaInterno(musica, url => {
+        const cbs = musica._capaEsperando || [];
+        musica._capaEsperando = null;
+        cbs.forEach(cb => cb(url));
+    });
+}
+
+function extrairCapaInterno(musica, callback) {
+    if (typeof jsmediatags === 'undefined') { extrairCapaScanner(musica, callback); return; }
 
     jsmediatags.read(musica.arquivo, {
         onSuccess: tag => {
@@ -4592,7 +4617,7 @@ function extrairCapaScanner(musica, callback) {
         callback(null);
     };
     leitor.onerror = () => { musica.capa = null; callback(null); };
-    leitor.readAsArrayBuffer(musica.arquivo);
+    leitor.readAsArrayBuffer(musica.arquivo.slice(0, 2 * 1024 * 1024));
 }
 
 /* ============ EDITAR METADADOS ============ */
@@ -4857,6 +4882,14 @@ reprodutor.addEventListener('pause', () => {
 btnAnterior.addEventListener('click', () => musicaAnterior());
 btnProximo.addEventListener('click', () => proximaMusica());
 
+let errosSeguidos = 0;
+reprodutor.addEventListener('playing', () => { errosSeguidos = 0; });
+reprodutor.addEventListener('error', () => {
+    if (indiceFila < 0 || !filaAtual.length) return;
+    mostrarToast('⚠️ Não foi possível reproduzir esta música');
+    if (filaAtual.length > 1 && ++errosSeguidos < 3) setTimeout(proximaMusica, 800);
+});
+
 reprodutor.addEventListener('ended', () => {
     if (sleepModoFimFaixa) {
         limparSleep();
@@ -4925,7 +4958,14 @@ function irParaIndice(novo, dir) {
                 }, 330);
             });
         });
-    }, 300);
+    }, document.hidden ? 0 : 300);
+
+    // Rede de segurança: requestAnimationFrame não corre com o ecrã desligado
+    setTimeout(() => {
+        swipeTravado = false;
+        cartao.style.transition = '';
+        cartao.style.transform = '';
+    }, 750);
 }
 
 /* ============ PROGRESSO ============ */
@@ -5049,9 +5089,11 @@ btnBusca.addEventListener('click', () => {
     if (buscaWrap.classList.contains('aberto')) buscaInput.focus();
     else { buscaInput.value = ''; filtroBusca = ''; renderizarBiblioteca(); }
 });
+let buscaTimer = null;
 buscaInput.addEventListener('input', e => {
     filtroBusca = e.target.value.trim();
-    renderizarBiblioteca();
+    clearTimeout(buscaTimer);
+    buscaTimer = setTimeout(renderizarBiblioteca, 200);
 });
 
 /* ============ TEMA ============ */
