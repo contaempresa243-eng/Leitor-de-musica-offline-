@@ -2,14 +2,14 @@
 <html lang="pt">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Leitor Offline</title>
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <meta name="theme-color" content="#0a192f">
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
-<link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet" crossorigin="anonymous">
-<script src="https://cdn.jsdelivr.net/npm/jsmediatags@3.9.7/dist/jsmediatags.min.js" crossorigin="anonymous"></script>
+<link href="vendor/font-awesome/css/font-awesome.min.css" rel="stylesheet">
+<script src="vendor/jsmediatags.min.js"></script>
 <style>
     :root {
         --cor-primaria: #0a192f;
@@ -1851,7 +1851,7 @@
             <div class="mini-titulo" id="miniTitulo">—</div>
             <div class="mini-artista" id="miniArtista">—</div>
         </div>
-        <button class="mini-btn-fav" id="miniBtnFav" title="Favorito"><i class="fa fa-heart-o"></i></button>
+        <button class="mini-btn-fav" id="miniBtnFav" title="Favorito" aria-label="Favorito"><i class="fa fa-heart-o"></i></button>
         <button class="mini-btn" id="miniBtnPlayPause"><i class="fa fa-pause"></i></button>
         <div class="mini-barra"><div class="mini-barra-fill" id="miniBarraFill"></div></div>
     </div>
@@ -1886,7 +1886,7 @@
                 <div class="cartao-capa sem-capa" id="cartaoCapa"></div>
                 <div class="cartao-gradiente"></div>
 
-                <button class="cartao-fav" id="btnFavPlayer" title="Favorito">
+                <button class="cartao-fav" id="btnFavPlayer" title="Favorito" aria-label="Favorito">
                     <i class="fa fa-heart-o"></i>
                 </button>
 
@@ -2168,7 +2168,7 @@
 <div class="modal-overlay" id="modalBackup">
     <div class="modal-sheet">
         <div class="modal-titulo">Backup</div>
-        <div class="modal-sub">Guarda favoritos, metadados editados, capas manuais e letras.</div>
+        <div class="modal-sub">Guarda favoritos, metadados editados, capas manuais, letras, estatísticas e definições (tema, EQ, velocidade, volume).</div>
 
         <button class="modal-acao" id="opcaoExportar">
             <i class="fa fa-download"></i>
@@ -2183,7 +2183,7 @@
             <i class="fa fa-upload"></i>
             <div class="modal-acao-texto">
                 <div>Importar backup</div>
-                <div class="modal-acao-sub">Funde com os dados atuais (não apaga nada)</div>
+                <div class="modal-acao-sub">Funde com os dados atuais; as definições do backup substituem as atuais</div>
             </div>
             <i class="fa fa-chevron-right" style="background:transparent; color:inherit; width:auto; height:auto;"></i>
         </button>
@@ -2628,8 +2628,13 @@ window.addEventListener('load', async () => {
     renderizarGridCores();
     renderizarGridModelos();
 
-    reprodutor.volume = 0.8;
-    atualizarVolumeUI(0.8);
+    let volInicial = 0.8;
+    try {
+        const g = parseFloat(localStorage.getItem('volume'));
+        if (!isNaN(g) && g >= 0 && g <= 1) volInicial = g;
+    } catch (e) { /* ignora */ }
+    reprodutor.volume = volInicial;
+    atualizarVolumeUI(volInicial);
     aplicarVelocidade();
 
     try {
@@ -3291,6 +3296,13 @@ function base64ParaBlob(dataUrl) {
     }
 }
 
+const CHAVES_CONFIG = ['temaSelecionado', 'modeloCartao', 'velocidade', 'eqEstado', 'volume'];
+function lerConfig() {
+    const c = {};
+    CHAVES_CONFIG.forEach(k => { try { const v = localStorage.getItem(k); if (v !== null) c[k] = v; } catch (e) { /* ignora */ } });
+    return c;
+}
+
 async function exportarBackup() {
     const dados = {
         versao: 1,
@@ -3299,6 +3311,8 @@ async function exportarBackup() {
         lista: listaReproducao.slice(),
         recentes: recentes.slice(),
         letrasLrc: { ...musicasLrc },
+        config: lerConfig(),
+        historico: registosHistorico.map(r => ({ musicaId: r.musicaId, timestamp: r.timestamp })),
         musicas: {}
     };
 
@@ -3434,9 +3448,52 @@ async function importarBackup(ficheiro) {
     }
 
     modalBackup.classList.remove('aberto');
+    let nHist = 0;
+    if (dados.config && typeof dados.config === 'object') {
+        const c = dados.config;
+        CHAVES_CONFIG.forEach(k => {
+            if (typeof c[k] === 'string') { try { localStorage.setItem(k, c[k]); } catch (e) { /* ignora */ } }
+        });
+        try {
+            if (c.temaSelecionado) aplicarTema(c.temaSelecionado);
+            if (c.modeloCartao) aplicarModelo(c.modeloCartao);
+            if (c.velocidade) definirVelocidade(parseFloat(c.velocidade));
+            const v = parseFloat(c.volume);
+            if (!isNaN(v) && v >= 0 && v <= 1) { reprodutor.volume = v; atualizarVolumeUI(v); }
+            if (c.eqEstado) {
+                const e = JSON.parse(c.eqEstado);
+                if (e && Array.isArray(e.valores) && e.valores.length === 5) {
+                    valoresEQ = e.valores;
+                    presetAtivoEQ = e.preset || 'Personalizado';
+                    aplicarValoresEQ();
+                }
+            }
+        } catch (e) { console.warn('Config do backup parcial:', e); }
+    }
+    if (Array.isArray(dados.historico) && db) {
+        const vistos = new Set(registosHistorico.map(r => r.musicaId + '|' + r.timestamp));
+        const novos = dados.historico.filter(r =>
+            r && r.musicaId && Number.isFinite(r.timestamp) && !vistos.has(r.musicaId + '|' + r.timestamp));
+        if (novos.length) {
+            await new Promise(resolve => {
+                try {
+                    const tx = db.transaction(['historico'], 'readwrite');
+                    const st = tx.objectStore('historico');
+                    novos.forEach(r => {
+                        const reg = { musicaId: r.musicaId, timestamp: r.timestamp };
+                        st.add(reg).onsuccess = ev => { reg.id = ev.target.result; registosHistorico.push(reg); };
+                    });
+                    tx.oncomplete = () => resolve();
+                    tx.onerror = tx.onabort = () => resolve();
+                } catch (e) { resolve(); }
+            });
+            nHist = novos.length;
+        }
+    }
     renderizarBiblioteca();
 
     const partes = [];
+    if (nHist) partes.push(`${nHist} reproduções`);
     if (nFav) partes.push(`${nFav} favoritos`);
     if (nMeta) partes.push(`${nMeta} metadados`);
     if (nCaps) partes.push(`${nCaps} capas`);
@@ -3895,7 +3952,7 @@ function renderizarLixeira() {
                 <button class="musica-btn-restaurar" data-restaurar="${m.id}" title="Restaurar">
                     <i class="fa fa-undo"></i>
                 </button>
-                <button class="musica-btn-menu" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
+                <button class="musica-btn-menu" aria-label="Mais opções" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
             ` : ''}
         `;
 
@@ -4197,10 +4254,10 @@ function renderizarListaMusicas(lista, mostrarRecentes = false) {
                 <div class="musica-info">${escapeHtml(artistaEfetivo)}${escapeHtml(pastaInfo)}</div>
             </div>
             ${!modoSelecao ? `
-                <button class="musica-btn-fav ${ehFavorita ? 'ativo' : ''}" data-fav="${escapeHtml(m.id)}" title="Favorito">
+                <button class="musica-btn-fav ${ehFavorita ? 'ativo' : ''}" data-fav="${escapeHtml(m.id)}" title="Favorito" aria-label="Favorito">
                     <i class="fa ${ehFavorita ? 'fa-heart' : 'fa-heart-o'}"></i>
                 </button>
-                <button class="musica-btn-menu" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
+                <button class="musica-btn-menu" aria-label="Mais opções" data-menu="${escapeHtml(m.id)}"><i class="fa fa-ellipsis-v"></i></button>
             ` : ''}
         `;
 
@@ -4292,6 +4349,7 @@ function renderizarPastas() {
                 favBtn.className = `musica-btn-fav ${ehFav ? 'ativo' : ''}`;
                 favBtn.dataset.fav = m.id;
                 favBtn.title = 'Favorito';
+                favBtn.setAttribute('aria-label', 'Favorito');
                 favBtn.innerHTML = `<i class="fa ${ehFav ? 'fa-heart' : 'fa-heart-o'}"></i>`;
                 favBtn.addEventListener('click', e => {
                     e.stopPropagation();
@@ -5593,6 +5651,22 @@ btnAdicionarLista.addEventListener('click', () => {
     renderizarBiblioteca();
 });
 
+/* ============ ACESSIBILIDADE: rótulos dos botões só com ícone ============ */
+(function rotularBotoes() {
+    const extra = {
+        btnPlayPause: 'Reproduzir ou pausar', miniBtnPlayPause: 'Reproduzir ou pausar',
+        btnAleatorio: 'Aleatório', btnRepetir: 'Repetir',
+        btnAcessarFicheiros: 'Aceder à biblioteca', btnVoltarBiblioteca: 'Minimizar player'
+    };
+    document.querySelectorAll('button').forEach(b => {
+        if (b.getAttribute('aria-label')) return;
+        let t = extra[b.id] || b.getAttribute('title');
+        if (!t && /^btnFechar/.test(b.id)) t = 'Fechar';
+        if (!t && /^btnVoltar/.test(b.id)) t = 'Voltar';
+        if (t) b.setAttribute('aria-label', t);
+    });
+})();
+
 /* ============ VOLUME ============ */
 function atualizarVolumeUI(v) {
     volumeSliderFill.style.height = `${v * 100}%`;
@@ -5604,6 +5678,7 @@ function setVolumeDe(clientY) {
     v = Math.max(0, Math.min(1, v));
     reprodutor.volume = v;
     atualizarVolumeUI(v);
+    try { localStorage.setItem('volume', String(v)); } catch (e) { /* ignora */ }
 }
 volumeSlider.addEventListener('mousedown', e => { sliderVolumeDragging = true; setVolumeDe(e.clientY); });
 document.addEventListener('mousemove', e => { if (sliderVolumeDragging) setVolumeDe(e.clientY); });
