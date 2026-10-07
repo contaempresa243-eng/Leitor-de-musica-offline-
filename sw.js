@@ -1,5 +1,5 @@
-// Leitor Offline — Service Worker v46 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
-const CACHE_APP = 'leitor-app-v46';
+// Leitor Offline — Service Worker v48 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
+const CACHE_APP = 'leitor-app-v48';
 
 const APP_SHELL = [
     './', './index.html', './manifest.json', './icon.svg',

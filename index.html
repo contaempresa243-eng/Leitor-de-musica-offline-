@@ -737,6 +737,23 @@
     }
     .letras-btn:active { transform: scale(0.96); }
     .letras-btn:disabled { opacity: 0.6; pointer-events: none; }
+    .pro-banner{display:flex;align-items:center;gap:12px;width:calc(100% - 32px);margin:0 16px 14px;padding:14px 16px;border-radius:14px;border:1.5px solid var(--cor-destaque);background:rgba(255,255,255,.04);color:var(--cor-texto);font:inherit;font-weight:700;text-align:left;cursor:pointer}
+    .pro-banner i:first-child{color:var(--cor-destaque)}
+    .pro-banner span{flex:1}
+    .pro-lock{position:absolute;top:10px;left:10px;width:26px;height:26px;border-radius:50%;background:rgba(0,0,0,.6);color:#fff;display:flex;align-items:center;justify-content:center;font-size:.75rem;z-index:2}
+    .pro-lista{margin:.4rem 0 .8rem 1.1rem;font-size:.9rem;line-height:1.7}
+    #proCodigo{width:100%;padding:10px;border-radius:12px;border:1px solid rgba(255,255,255,.2);background:rgba(0,0,0,.25);color:inherit;font:inherit;font-size:.8rem;resize:none;word-break:break-all}
+    .pro-estado{min-height:1.2em;font-size:.82rem;margin:6px 2px 10px}
+    .pro-estado.erro{color:#f87171}
+    .pro-estado.ok{color:#4ade80}
+    .pro-contacto{font-size:.82rem;opacity:.85;margin:0 2px 10px}
+    .pro-contacto a{color:var(--cor-destaque)}
+    .pro-bloqueio{display:flex;align-items:center;gap:12px;margin:16px 0;padding:16px;border-radius:14px;border:1px dashed rgba(255,255,255,.3)}
+    .pro-bloqueio>i{font-size:1.4rem;color:var(--cor-destaque)}
+    .pro-bloqueio div{flex:1;display:flex;flex-direction:column;font-size:.85rem}
+    .pro-btn{padding:8px 14px;border-radius:999px;border:none;background:var(--cor-destaque);color:#0a192f;font:inherit;font-weight:800;cursor:pointer}
+    .eq-preset-btn.bloqueado::after{content:"\f023";font-family:FontAwesome;margin-left:6px;font-size:.7em;opacity:.8}
+    .modelo-card{position:relative}
     .letra-trad {
         display: block; margin-top: 3px;
         font-size: 0.82rem; font-weight: 500; font-style: italic;
@@ -1941,6 +1958,7 @@
         <button class="temas-btn-voltar" id="btnVoltarTemas"><i class="fa fa-chevron-left"></i></button>
         <h1 class="temas-titulo">Personalizar</h1>
     </div>
+    <button class="pro-banner" id="btnAbrirPro"><i class="fa fa-star"></i><span id="proBannerTexto">Desbloquear Leitor Offline Pro</span><i class="fa fa-chevron-right"></i></button>
     <div class="temas-secao">Cores</div>
     <div class="temas-grid" id="gridCores"></div>
     <div class="temas-secao">Modelos de cartão</div>
@@ -2188,6 +2206,40 @@
         <div class="edit-meta-acoes">
             <button class="edit-meta-btn primario" id="btnFecharVel">Fechar</button>
         </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="modalPro">
+    <div class="modal-sheet">
+        <div class="modal-titulo"><i class="fa fa-star"></i> Leitor Offline Pro</div>
+        <div class="modal-sub" id="proMotivo">Desbloqueie tudo com um código de ativação.</div>
+        <ul class="pro-lista">
+            <li>Todos os temas de cor e modelos de cartão</li>
+            <li>Equalizador completo: presets e ajuste livre</li>
+            <li>Estatísticas completas</li>
+            <li>Procurar letras online</li>
+            <li>Tradução das letras para português</li>
+        </ul>
+        <div id="proFormulario">
+            <textarea id="proCodigo" rows="3" placeholder="Cole aqui o seu código (começa por LP1-)"></textarea>
+            <div class="pro-estado" id="proEstado"></div>
+            <div class="pro-contacto" id="proContacto"></div>
+            <button class="modal-acao" id="btnAtivarPro">
+                <i class="fa fa-key"></i>
+                <div class="modal-acao-texto"><div>Ativar</div></div>
+            </button>
+        </div>
+        <div id="proAtivoInfo" style="display:none">
+            <div class="pro-estado ok">✓ Pro ativo neste dispositivo. Obrigado pelo apoio!</div>
+            <button class="modal-acao" id="btnRemoverPro">
+                <i class="fa fa-unlink"></i>
+                <div class="modal-acao-texto"><div>Remover licença deste dispositivo</div></div>
+            </button>
+        </div>
+        <button class="modal-acao" id="btnFecharPro">
+            <i class="fa fa-times"></i>
+            <div class="modal-acao-texto"><div>Fechar</div></div>
+        </button>
     </div>
 </div>
 
@@ -2478,13 +2530,17 @@ function renderizarGridCores() {
         card.style.background = `linear-gradient(135deg, ${t.corP} 0%, ${t.corP} 60%, ${t.corS} 180%)`;
         card.innerHTML = `
             <div class="tema-card-check"><i class="fa fa-check"></i></div>
+            ${(!proAtivo && !TEMAS_GRATIS.includes(Number(id))) ? '<div class="pro-lock"><i class="fa fa-lock"></i></div>' : ''}
             <div class="tema-card-preview">
                 <div class="tema-preview-dot" style="background:${t.corS}"></div>
                 <div class="tema-preview-dot" style="background:${t.texto}; opacity:0.7"></div>
             </div>
             <div class="tema-card-nome">${t.nome}</div>
         `;
-        card.addEventListener('click', () => aplicarTema(id));
+        card.addEventListener('click', () => {
+            if (!proAtivo && !TEMAS_GRATIS.includes(Number(id))) { abrirModalPro('Temas de cor'); return; }
+            aplicarTema(id);
+        });
         gridCores.appendChild(card);
     });
     atualizarEstadoGridCores();
@@ -2504,6 +2560,7 @@ function renderizarGridModelos() {
         card.dataset.id = m.id;
         card.innerHTML = `
             <div class="modelo-card-check"><i class="fa fa-check"></i></div>
+            ${(!proAtivo && !MODELOS_GRATIS.includes(m.id)) ? '<div class="pro-lock"><i class="fa fa-lock"></i></div>' : ''}
             <div class="modelo-preview pv-${m.id}">
                 <div class="modelo-preview-capa"></div>
                 <div class="modelo-preview-info">
@@ -2513,7 +2570,10 @@ function renderizarGridModelos() {
             </div>
             <div class="modelo-card-nome">${m.nome}</div>
         `;
-        card.addEventListener('click', () => aplicarModelo(m.id));
+        card.addEventListener('click', () => {
+            if (!proAtivo && !MODELOS_GRATIS.includes(m.id)) { abrirModalPro('Modelos de cartão'); return; }
+            aplicarModelo(m.id);
+        });
         gridModelos.appendChild(card);
     });
     atualizarEstadoGridModelos();
@@ -2654,6 +2714,7 @@ window.addEventListener('load', async () => {
     aplicarModelo(temaModeloAtivo);
     renderizarGridCores();
     renderizarGridModelos();
+    iniciarPro();
 
     let volInicial = 0.8;
     try {
@@ -3028,7 +3089,7 @@ function chaveLetra(linhas) {
 }
 
 function obterTraducaoAtiva(linhas) {
-    if (!mostrarTraducao) return null;
+    if (!mostrarTraducao || !proAtivo) return null;
     const m = filaAtual[indiceFila];
     if (!m || !m.traducaoPt) return null;
     return m.traducaoPt.chave === chaveLetra(linhas) ? m.traducaoPt.linhas : null;
@@ -3111,6 +3172,7 @@ function persistirTraducao(m) {
 
 btnTraduzirLetra.addEventListener('click', async () => {
     if (indiceFila < 0) return;
+    if (!exigirPro('Tradução das letras')) return;
     const m = filaAtual[indiceFila];
     const linhas = linhasDaLetraAtual();
     if (!linhas.some(t => t.trim())) { mostrarToast('Não há letra para traduzir'); return; }
@@ -3200,6 +3262,7 @@ function melhorResultado(lista, duracao) {
 
 btnProcurarLetra.addEventListener('click', async () => {
     if (indiceFila < 0) return;
+    if (!exigirPro('Procurar letras online')) return;
     if (!navigator.onLine) { mostrarToast('Sem internet. Liga os dados ou o Wi-Fi.'); return; }
     const m = filaAtual[indiceFila];
     const jaTem = m.letraManual || musicasLrc[nomeBaseDoFicheiro(m.nome)];
@@ -3494,6 +3557,7 @@ function atualizarUISliders() {
             };
 
             const aplicar = (clientY) => {
+                if (!exigirPro('Equalizador completo')) { dragging = false; return; }
                 const v = calcularValor(clientY);
                 valoresEQ[idx] = v;
                 presetAtivoEQ = 'Personalizado';
@@ -3557,6 +3621,7 @@ function atualizarUIPresets() {
             btn.dataset.preset = nome;
             btn.textContent = nome;
             btn.addEventListener('click', () => {
+                if (nome !== 'Normal' && !exigirPro('Presets do equalizador')) return;
                 valoresEQ = [...EQ_PRESETS[nome]];
                 presetAtivoEQ = nome;
                 aplicarValoresEQ();
@@ -3569,6 +3634,7 @@ function atualizarUIPresets() {
 
     eqPresets.querySelectorAll('.eq-preset-btn').forEach(btn => {
         btn.classList.toggle('ativo', btn.dataset.preset === presetAtivoEQ);
+        btn.classList.toggle('bloqueado', !proAtivo && btn.dataset.preset !== 'Normal');
     });
 }
 
@@ -3817,6 +3883,7 @@ async function importarBackup(ficheiro) {
             nHist = novos.length;
         }
     }
+    aplicarRestricoesPro();
     renderizarBiblioteca();
 
     const partes = [];
@@ -4842,6 +4909,137 @@ async function restaurarSessao() {
         atualizarDestaqueLista();
     } catch (e) { console.warn('Retoma falhou:', e); }
 }
+
+/* ============ LEITOR OFFLINE PRO (licença) ============ */
+// Edite estas duas linhas: como o utilizador obtém o código (ex.: link do seu WhatsApp)
+const PRO_CONTACTO_TEXTO = 'Para obter o código, fale connosco no WhatsApp: 944 602 099';
+const PRO_CONTACTO_URL = 'https://wa.me/244944602099?text=' + encodeURIComponent('Olá! Quero o código do Leitor Offline Pro.');
+
+const PRO_CHAVE_PUBLICA = {"kty": "EC", "crv": "P-256", "x": "8jTCs4Q-h4t1WxN2j_ih1xCt6lZZih0CJknb9KYNg_U", "y": "2MAsmQgi7kA-Da1CVGKToDaYYP5rRIPA4o_IsqXBkZE"};
+const TEMAS_GRATIS = [1, 2];
+const MODELOS_GRATIS = ['classico', 'minimal'];
+let proAtivo = false;
+
+function b64urlParaBytes(t) {
+    t = t.replace(/-/g, '+').replace(/_/g, '/');
+    while (t.length % 4) t += '=';
+    const bin = atob(t);
+    const out = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+    return out;
+}
+
+async function verificarCodigoPro(texto) {
+    try {
+        const cod = String(texto || '').replace(/\s+/g, '');
+        if (!cod.startsWith('LP1-')) return false;
+        const bytes = b64urlParaBytes(cod.slice(4));
+        if (bytes.length !== 72) return false;
+        const id = bytes.slice(0, 8), sig = bytes.slice(8);
+        const idHex = Array.from(id).map(b => b.toString(16).padStart(2, '0')).join('');
+        const chave = await crypto.subtle.importKey('jwk', PRO_CHAVE_PUBLICA,
+            { name: 'ECDSA', namedCurve: 'P-256' }, false, ['verify']);
+        return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, chave, sig,
+            new TextEncoder().encode('leitor-pro-v1:' + idHex));
+    } catch (e) { return false; }
+}
+
+function exigirPro(funcao) {
+    if (proAtivo) return true;
+    abrirModalPro(funcao);
+    return false;
+}
+
+const modalPro = document.getElementById('modalPro');
+function abrirModalPro(funcao) {
+    document.getElementById('proMotivo').textContent = proAtivo
+        ? 'O Leitor Offline Pro está ativo.'
+        : (funcao ? funcao + ' faz parte do Leitor Offline Pro.' : 'Desbloqueie tudo com um código de ativação.');
+    const est = document.getElementById('proEstado');
+    est.textContent = ''; est.className = 'pro-estado';
+    const c = document.getElementById('proContacto');
+    c.innerHTML = '';
+    if (PRO_CONTACTO_URL) {
+        const a = document.createElement('a');
+        a.href = PRO_CONTACTO_URL; a.target = '_blank'; a.rel = 'noopener';
+        a.textContent = PRO_CONTACTO_TEXTO;
+        c.appendChild(a);
+    } else { c.textContent = PRO_CONTACTO_TEXTO; }
+    document.getElementById('proFormulario').style.display = proAtivo ? 'none' : '';
+    document.getElementById('proAtivoInfo').style.display = proAtivo ? '' : 'none';
+    modalPro.classList.add('aberto');
+}
+
+function atualizarEstadoPro() {
+    document.getElementById('proBannerTexto').textContent = proAtivo ? 'Leitor Offline Pro ativo ✓' : 'Desbloquear Leitor Offline Pro';
+    aplicarRestricoesPro();
+    renderizarGridCores();
+    renderizarGridModelos();
+    atualizarUIPresets();
+    atualizarBotaoTraduzir();
+    renderizarEstatisticas();
+}
+
+function aplicarRestricoesPro() {
+    if (proAtivo) return;
+    if (!TEMAS_GRATIS.includes(Number(temaCorAtivo))) aplicarTema(1);
+    if (!MODELOS_GRATIS.includes(temaModeloAtivo)) aplicarModelo('classico');
+    if (presetAtivoEQ !== 'Normal') {
+        valoresEQ = [...EQ_PRESETS['Normal']];
+        presetAtivoEQ = 'Normal';
+        try { localStorage.removeItem('eqEstado'); } catch (e) { /* ignora */ }
+        if (typeof filtrosEQ !== 'undefined' && filtrosEQ.length) aplicarValoresEQ();
+    }
+}
+
+async function iniciarPro() {
+    let cod = '';
+    try { cod = localStorage.getItem('licencaPro') || ''; } catch (e) { /* ignora */ }
+    proAtivo = cod ? await verificarCodigoPro(cod) : false;
+    atualizarEstadoPro();
+}
+
+document.getElementById('btnAbrirPro').addEventListener('click', () => abrirModalPro());
+document.getElementById('btnFecharPro').addEventListener('click', () => modalPro.classList.remove('aberto'));
+modalPro.addEventListener('click', e => { if (e.target === modalPro) modalPro.classList.remove('aberto'); });
+
+document.getElementById('btnAtivarPro').addEventListener('click', async () => {
+    const campo = document.getElementById('proCodigo');
+    const est = document.getElementById('proEstado');
+    est.className = 'pro-estado'; est.textContent = 'A verificar…';
+    if (await verificarCodigoPro(campo.value)) {
+        try { localStorage.setItem('licencaPro', campo.value.replace(/\s+/g, '')); } catch (e) { /* ignora */ }
+        proAtivo = true;
+        campo.value = '';
+        atualizarEstadoPro();
+        abrirModalPro();
+        mostrarToast('Pro ativado. Obrigado!');
+    } else {
+        est.className = 'pro-estado erro';
+        est.textContent = 'Código inválido. Confirme se o copiou inteiro.';
+    }
+});
+
+document.getElementById('btnRemoverPro').addEventListener('click', () => {
+    if (!confirm('Remover a licença Pro deste dispositivo?')) return;
+    try { localStorage.removeItem('licencaPro'); } catch (e) { /* ignora */ }
+    proAtivo = false;
+    atualizarEstadoPro();
+    modalPro.classList.remove('aberto');
+});
+
+const _renderEstatisticasOriginal = renderizarEstatisticas;
+renderizarEstatisticas = function () {
+    _renderEstatisticasOriginal();
+    if (proAtivo || !statsConteudo) return;
+    if (statsConteudo.querySelector('.stats-vazio')) return;
+    statsConteudo.querySelectorAll('.stats-secao').forEach(el => el.remove());
+    const b = document.createElement('div');
+    b.className = 'pro-bloqueio';
+    b.innerHTML = '<i class="fa fa-lock"></i><div><strong>Gráfico, Top 5 e histórico</strong><span>Disponível no Leitor Offline Pro</span></div><button class="pro-btn">Desbloquear</button>';
+    b.querySelector('button').addEventListener('click', () => abrirModalPro('Estatísticas completas'));
+    statsConteudo.appendChild(b);
+};
 
 /* ============ TOCAR ============ */
 function tocarDaLista(lista, id, marcarRecente = false) {
