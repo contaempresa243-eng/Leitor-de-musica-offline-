@@ -737,6 +737,12 @@
     }
     .letras-btn:active { transform: scale(0.96); }
     .letras-btn:disabled { opacity: 0.6; pointer-events: none; }
+    .letras-acoes { padding: 8px 20px 12px; gap: 16px; flex-wrap: nowrap; }
+    .letras-acoes .letras-btn {
+        width: 38px; height: 38px; padding: 0;
+        border-radius: 50%; justify-content: center;
+        font-size: 0.95rem;
+    }
 
     .letras-textarea {
         width: 100%;
@@ -1961,9 +1967,9 @@
     </div>
     <div class="letras-conteudo" id="letrasConteudo"></div>
     <div class="letras-acoes" id="letrasAcoes" style="display:none">
-        <button class="letras-btn" id="btnProcurarLetra"><i class="fa fa-search"></i> Procurar online</button>
-        <button class="letras-btn secundario" id="btnEditarLetra"><i class="fa fa-pencil"></i> Editar letra</button>
-        <button class="letras-btn secundario" id="btnImportarLetra"><i class="fa fa-download"></i> Importar .lrc</button>
+        <button class="letras-btn" id="btnProcurarLetra" title="Procurar letra online" aria-label="Procurar letra online"><i class="fa fa-search"></i></button>
+        <button class="letras-btn secundario" id="btnEditarLetra" title="Editar letra" aria-label="Editar letra"><i class="fa fa-pencil"></i></button>
+        <button class="letras-btn secundario" id="btnImportarLetra" title="Importar ficheiro .lrc" aria-label="Importar ficheiro .lrc"><i class="fa fa-download"></i></button>
         <input type="file" id="inputFicheiroLrc" accept=".lrc,.txt,text/plain" multiple hidden>
     </div>
 </section>
@@ -2935,9 +2941,10 @@ function atualizarLinhaAtiva(forcar = false) {
     if (idx >= 0 && linhas[idx]) {
         const alvo = linhas[idx];
         const containerHeight = letrasConteudo.clientHeight;
-        const elTop = alvo.offsetTop;
-        const elHeight = alvo.offsetHeight;
-        const novoScroll = elTop - containerHeight / 2 + elHeight / 2;
+        const rAlvo = alvo.getBoundingClientRect();
+        const rCont = letrasConteudo.getBoundingClientRect();
+        const novoScroll = letrasConteudo.scrollTop + (rAlvo.top - rCont.top)
+                         - containerHeight / 2 + rAlvo.height / 2;
         letrasConteudo.scrollTo({ top: novoScroll, behavior: 'smooth' });
     }
 }
@@ -3006,8 +3013,8 @@ function melhorResultado(lista, duracao) {
     let validos = (Array.isArray(lista) ? lista : [])
         .filter(r => r && !r.instrumental && (r.syncedLyrics || r.plainLyrics));
     if (duracao) {
-        // Duração muito diferente = outra versão; os tempos não bateriam certo
-        validos = validos.filter(r => !r.duration || Math.abs(r.duration - duracao) <= 20);
+        // Duração muito diferente (>10 s) = outra versão; os tempos não bateriam certo
+        validos = validos.filter(r => !r.duration || Math.abs(r.duration - duracao) <= 10);
     }
     if (!validos.length) return null;
     const pontos = r => {
@@ -3032,7 +3039,7 @@ btnProcurarLetra.addEventListener('click', async () => {
     const duracao = reprodutor.duration && isFinite(reprodutor.duration) ? reprodutor.duration : 0;
     const textoOriginal = btnProcurarLetra.innerHTML;
     btnProcurarLetra.disabled = true;
-    btnProcurarLetra.innerHTML = '<i class="fa fa-spinner fa-spin"></i> A procurar…';
+    btnProcurarLetra.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
 
     try {
         let r = null;
