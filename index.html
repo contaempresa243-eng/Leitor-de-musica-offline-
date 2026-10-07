@@ -737,6 +737,14 @@
     }
     .letras-btn:active { transform: scale(0.96); }
     .letras-btn:disabled { opacity: 0.6; pointer-events: none; }
+    .letra-trad {
+        display: block; margin-top: 3px;
+        font-size: 0.82rem; font-weight: 500; font-style: italic;
+        opacity: 0.85; color: var(--cor-texto);
+    }
+    .letra-linha.ativa .letra-trad { opacity: 1; }
+    .letra-par { padding: 8px 0; min-height: 1em; line-height: 1.5; font-weight: 600; color: var(--cor-texto); }
+    .letras-acoes .letras-btn.secundario.ativo { background: var(--cor-destaque); color: #0a192f; }
     .letras-acoes { padding: 8px 20px 12px; gap: 16px; flex-wrap: nowrap; }
     .letras-acoes .letras-btn {
         width: 38px; height: 38px; padding: 0;
@@ -1967,6 +1975,7 @@
     </div>
     <div class="letras-conteudo" id="letrasConteudo"></div>
     <div class="letras-acoes" id="letrasAcoes" style="display:none">
+        <button class="letras-btn secundario" id="btnTraduzirLetra" title="Traduzir para português" aria-label="Traduzir para português"><i class="fa fa-language"></i></button>
         <button class="letras-btn" id="btnProcurarLetra" title="Procurar letra online" aria-label="Procurar letra online"><i class="fa fa-search"></i></button>
         <button class="letras-btn secundario" id="btnEditarLetra" title="Editar letra" aria-label="Editar letra"><i class="fa fa-pencil"></i></button>
         <button class="letras-btn secundario" id="btnImportarLetra" title="Importar ficheiro .lrc" aria-label="Importar ficheiro .lrc"><i class="fa fa-download"></i></button>
@@ -2602,6 +2611,7 @@ function carregarMusicasDB() {
             }
             if (item.tituloTag) musica.tituloTag = item.tituloTag;
             if (item.tagsLidas) musica.tagsLidas = true;
+            if (item.traducaoPt) musica.traducaoPt = item.traducaoPt;
             if (item.capaRemovida) musica.capaRemovida = true;
             if (item.letraManual) musica.letraManual = item.letraManual;
             if (item.removida) musica.removida = true;
@@ -2896,25 +2906,54 @@ function aplicarConteudoLetra(conteudo) {
     if (temTimestamps(conteudo)) {
         letraLinhas = parseLRC(conteudo);
         if (letraLinhas.length === 0) {
-            letraAtualSimples = conteudo;
-            letrasConteudo.innerHTML = `<div class="letra-linha-simples">${escapeHtml(conteudo)}</div>`;
-            letrasAcoes.style.display = 'flex';
+            renderizarSimples(conteudo);
             return;
         }
+        const tradAtual = obterTraducaoAtiva(letraLinhas.map(l => l.texto));
         letraLinhas.forEach((l, i) => {
             const div = document.createElement('div');
             div.className = 'letra-linha';
             div.dataset.idx = i;
             div.textContent = l.texto;
+            if (tradAtual && tradAtual[i]) {
+                const sp = document.createElement('span');
+                sp.className = 'letra-trad';
+                sp.textContent = tradAtual[i];
+                div.appendChild(sp);
+            }
             letrasConteudo.appendChild(div);
         });
         letrasAcoes.style.display = 'flex';
+        atualizarBotaoTraduzir();
         atualizarLinhaAtiva(true);
     } else {
-        letraAtualSimples = conteudo;
-        letrasConteudo.innerHTML = `<div class="letra-linha-simples">${escapeHtml(conteudo)}</div>`;
-        letrasAcoes.style.display = 'flex';
+        renderizarSimples(conteudo);
     }
+}
+
+function renderizarSimples(conteudo) {
+    letraAtualSimples = conteudo;
+    const linhas = conteudo.split(/\r?\n/);
+    const trad = obterTraducaoAtiva(linhas);
+    if (!trad) {
+        letrasConteudo.innerHTML = `<div class="letra-linha-simples">${escapeHtml(conteudo)}</div>`;
+    } else {
+        letrasConteudo.innerHTML = '';
+        linhas.forEach((t, i) => {
+            const d = document.createElement('div');
+            d.className = 'letra-par';
+            d.textContent = t;
+            if (trad[i]) {
+                const sp = document.createElement('span');
+                sp.className = 'letra-trad';
+                sp.textContent = trad[i];
+                d.appendChild(sp);
+            }
+            letrasConteudo.appendChild(d);
+        });
+    }
+    letrasAcoes.style.display = 'flex';
+    atualizarBotaoTraduzir();
 }
 
 function atualizarLinhaAtiva(forcar = false) {
@@ -2974,6 +3013,137 @@ btnEditarLetra.addEventListener('click', () => {
     inputLetra.value = m.letraManual || musicasLrc[nomeBaseDoFicheiro(m.nome)] || '';
     modalEditarLetra.classList.add('aberto');
     setTimeout(() => inputLetra.focus(), 300);
+});
+
+/* ---- Tradução da letra para português ---- */
+let mostrarTraducao = false;
+try { mostrarTraducao = localStorage.getItem('mostrarTraducao') === '1'; } catch (e) { /* ignora */ }
+const btnTraduzirLetra = document.getElementById('btnTraduzirLetra');
+
+function chaveLetra(linhas) {
+    const t = linhas.join('\n');
+    let h = 0;
+    for (let i = 0; i < t.length; i++) h = (h * 31 + t.charCodeAt(i)) | 0;
+    return linhas.length + ':' + h;
+}
+
+function obterTraducaoAtiva(linhas) {
+    if (!mostrarTraducao) return null;
+    const m = filaAtual[indiceFila];
+    if (!m || !m.traducaoPt) return null;
+    return m.traducaoPt.chave === chaveLetra(linhas) ? m.traducaoPt.linhas : null;
+}
+
+function linhasDaLetraAtual() {
+    if (letraLinhas.length) return letraLinhas.map(l => l.texto);
+    return letraAtualSimples ? letraAtualSimples.split(/\r?\n/) : [];
+}
+
+function atualizarBotaoTraduzir() {
+    const linhas = linhasDaLetraAtual();
+    btnTraduzirLetra.classList.toggle('ativo', !!linhas.length && !!obterTraducaoAtiva(linhas));
+}
+
+async function traduzirTexto(texto) {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 12000);
+    try {
+        const url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=pt&dt=t&q='
+                  + encodeURIComponent(texto);
+        const r = await fetch(url, { signal: ctrl.signal });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const j = await r.json();
+        return {
+            texto: (j[0] || []).map(seg => seg[0]).join('').replace(/\n+$/, ''),
+            lingua: j[2] || ''
+        };
+    } finally { clearTimeout(t); }
+}
+
+// Devolve array alinhado com `linhas`, ou null se a letra já estiver em português
+async function traduzirLinhas(linhas) {
+    const idx = [];
+    linhas.forEach((t, i) => { if (t.trim()) idx.push(i); });
+    const saida = linhas.map(() => '');
+
+    // Lotes de ~600 caracteres, para caber no pedido e manter as linhas alinhadas
+    const lotes = [];
+    let atual = [], tam = 0;
+    idx.forEach(i => {
+        if (tam + linhas[i].length > 600 && atual.length) { lotes.push(atual); atual = []; tam = 0; }
+        atual.push(i); tam += linhas[i].length + 1;
+    });
+    if (atual.length) lotes.push(atual);
+
+    for (let b = 0; b < lotes.length; b++) {
+        const lote = lotes[b];
+        const r = await traduzirTexto(lote.map(i => linhas[i]).join('\n'));
+        if (b === 0 && r.lingua === 'pt') return null;
+        const partes = r.texto.split('\n');
+        if (partes.length === lote.length) {
+            lote.forEach((i, k) => { saida[i] = partes[k].trim(); });
+        } else {
+            // Alinhamento falhou: traduz linha a linha neste lote
+            for (const i of lote) saida[i] = (await traduzirTexto(linhas[i])).texto.trim();
+        }
+    }
+    return saida;
+}
+
+function persistirTraducao(m) {
+    return new Promise(resolve => {
+        if (!db) return resolve();
+        try {
+            const tx = db.transaction(['musicas'], 'readwrite');
+            const st = tx.objectStore('musicas');
+            const rq = st.get(m.id);
+            rq.onsuccess = () => {
+                const d = rq.result;
+                if (!d) return;
+                d.traducaoPt = m.traducaoPt;
+                st.put(d);
+            };
+            tx.oncomplete = () => resolve();
+            tx.onerror = tx.onabort = () => resolve();
+        } catch (e) { resolve(); }
+    });
+}
+
+btnTraduzirLetra.addEventListener('click', async () => {
+    if (indiceFila < 0) return;
+    const m = filaAtual[indiceFila];
+    const linhas = linhasDaLetraAtual();
+    if (!linhas.some(t => t.trim())) { mostrarToast('Não há letra para traduzir'); return; }
+    const chave = chaveLetra(linhas);
+
+    // Já traduzida: só alterna entre mostrar e esconder (funciona offline)
+    if (m.traducaoPt && m.traducaoPt.chave === chave) {
+        mostrarTraducao = !mostrarTraducao;
+        try { localStorage.setItem('mostrarTraducao', mostrarTraducao ? '1' : '0'); } catch (e) { /* ignora */ }
+        carregarLetraDaMusica(m);
+        return;
+    }
+
+    if (!navigator.onLine) { mostrarToast('Sem internet. Liga os dados ou o Wi-Fi.'); return; }
+    const iconeOriginal = btnTraduzirLetra.innerHTML;
+    btnTraduzirLetra.disabled = true;
+    btnTraduzirLetra.innerHTML = '<i class="fa fa-spinner fa-spin"></i>';
+    try {
+        const resultado = await traduzirLinhas(linhas);
+        if (!resultado) { mostrarToast('A letra já está em português'); return; }
+        m.traducaoPt = { chave, linhas: resultado };
+        await persistirTraducao(m);
+        mostrarTraducao = true;
+        try { localStorage.setItem('mostrarTraducao', '1'); } catch (e) { /* ignora */ }
+        if (filaAtual[indiceFila] === m) carregarLetraDaMusica(m);
+        mostrarToast('Tradução adicionada');
+    } catch (e) {
+        console.warn('Tradução falhou:', e);
+        mostrarToast('Não consegui traduzir. Tenta outra vez.');
+    } finally {
+        btnTraduzirLetra.disabled = false;
+        btnTraduzirLetra.innerHTML = iconeOriginal;
+    }
 });
 
 /* ---- Procurar letra online (lrclib.net, gratuito) ---- */
