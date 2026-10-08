@@ -1,9 +1,9 @@
-// Leitor Offline — Service Worker v50 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
-const CACHE_APP = 'leitor-app-v50';
+// Leitor Offline — Service Worker v51 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
+const CACHE_APP = 'leitor-app-v51';
 
 const APP_SHELL = [
     './', './index.html', './manifest.json', './icon.svg',
-    './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png',
+    './politica-privacidade.html', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png',
     './vendor/jsmediatags.min.js',
     './vendor/font-awesome/css/font-awesome.min.css',
     './vendor/font-awesome/fonts/fontawesome-webfont.woff2'
