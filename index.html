@@ -4916,6 +4916,8 @@ const PRO_CONTACTO_TEXTO = 'Para obter o código, fale connosco no WhatsApp: 944
 const PRO_CONTACTO_URL = 'https://wa.me/244944602099?text=' + encodeURIComponent('Olá! Quero o código do Leitor Offline Pro.');
 
 const PRO_CHAVE_PUBLICA = {"kty": "EC", "crv": "P-256", "x": "8jTCs4Q-h4t1WxN2j_ih1xCt6lZZih0CJknb9KYNg_U", "y": "2MAsmQgi7kA-Da1CVGKToDaYYP5rRIPA4o_IsqXBkZE"};
+// Endereço do servidor de ativação (Cloudflare Worker). Vazio = só validação local.
+const PRO_SERVIDOR = 'https://leitor-licencas.contaempresa243.workers.dev';
 const TEMAS_GRATIS = [1, 2];
 const MODELOS_GRATIS = ['classico', 'minimal'];
 let proAtivo = false;
@@ -4942,6 +4944,33 @@ async function verificarCodigoPro(texto) {
         return await crypto.subtle.verify({ name: 'ECDSA', hash: 'SHA-256' }, chave, sig,
             new TextEncoder().encode('leitor-pro-v1:' + idHex));
     } catch (e) { return false; }
+}
+
+function obterDispositivoId() {
+    let id = '';
+    try { id = localStorage.getItem('dispositivoId') || ''; } catch (e) { /* ignora */ }
+    if (!id) {
+        id = (crypto.randomUUID ? crypto.randomUUID() : Date.now().toString(36) + Math.random().toString(36).slice(2));
+        try { localStorage.setItem('dispositivoId', id); } catch (e) { /* ignora */ }
+    }
+    return id;
+}
+
+// Devolve {ok:true} | {ok:false, motivo} | {erro:true} (sem ligação ou servidor em baixo)
+async function pedirServidor(rota, codigo, ms) {
+    if (!PRO_SERVIDOR) return { ok: true };
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), ms || 8000);
+    try {
+        const r = await fetch(PRO_SERVIDOR + rota, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ codigo: codigo, dispositivo: obterDispositivoId() }),
+            signal: ctrl.signal
+        });
+        if (!r.ok) return { erro: true };
+        return await r.json();
+    } catch (e) { return { erro: true }; } finally { clearTimeout(t); }
 }
 
 function exigirPro(funcao) {
@@ -4997,6 +5026,16 @@ async function iniciarPro() {
     try { cod = localStorage.getItem('licencaPro') || ''; } catch (e) { /* ignora */ }
     proAtivo = cod ? await verificarCodigoPro(cod) : false;
     atualizarEstadoPro();
+    // Em segundo plano: confirma a licença no servidor (cancelamentos e limite de dispositivos)
+    if (proAtivo && PRO_SERVIDOR && navigator.onLine) {
+        const r = await pedirServidor('/ativar', cod, 6000);
+        if (r.ok === false && (r.motivo === 'revogado' || r.motivo === 'limite' || r.motivo === 'invalido')) {
+            try { localStorage.removeItem('licencaPro'); } catch (e) { /* ignora */ }
+            proAtivo = false;
+            atualizarEstadoPro();
+            mostrarToast(r.motivo === 'limite' ? 'Este código já está a ser usado noutros dispositivos' : 'A licença Pro foi cancelada');
+        }
+    }
 }
 
 document.getElementById('btnAbrirPro').addEventListener('click', () => abrirModalPro());
@@ -5006,22 +5045,46 @@ modalPro.addEventListener('click', e => { if (e.target === modalPro) modalPro.cl
 document.getElementById('btnAtivarPro').addEventListener('click', async () => {
     const campo = document.getElementById('proCodigo');
     const est = document.getElementById('proEstado');
+    const botao = document.getElementById('btnAtivarPro');
+    const codigo = campo.value.replace(/\s+/g, '');
     est.className = 'pro-estado'; est.textContent = 'A verificar…';
-    if (await verificarCodigoPro(campo.value)) {
-        try { localStorage.setItem('licencaPro', campo.value.replace(/\s+/g, '')); } catch (e) { /* ignora */ }
+    botao.disabled = true;
+    try {
+        if (!(await verificarCodigoPro(codigo))) {
+            est.className = 'pro-estado erro';
+            est.textContent = 'Código inválido. Confirme se o copiou inteiro.';
+            return;
+        }
+        const r = await pedirServidor('/ativar', codigo);
+        if (r.erro) {
+            est.className = 'pro-estado erro';
+            est.textContent = 'Sem ligação ao servidor. Ligue-se à internet e tente de novo.';
+            return;
+        }
+        if (r.ok === false) {
+            const msgs = {
+                limite: 'Este código já foi usado em 2 dispositivos.',
+                revogado: 'Este código foi cancelado.',
+                invalido: 'Código inválido. Confirme se o copiou inteiro.'
+            };
+            est.className = 'pro-estado erro';
+            est.textContent = msgs[r.motivo] || 'Não foi possível ativar. Tente mais tarde.';
+            return;
+        }
+        try { localStorage.setItem('licencaPro', codigo); } catch (e) { /* ignora */ }
         proAtivo = true;
         campo.value = '';
         atualizarEstadoPro();
         abrirModalPro();
         mostrarToast('Pro ativado. Obrigado!');
-    } else {
-        est.className = 'pro-estado erro';
-        est.textContent = 'Código inválido. Confirme se o copiou inteiro.';
-    }
+    } finally { botao.disabled = false; }
 });
 
-document.getElementById('btnRemoverPro').addEventListener('click', () => {
-    if (!confirm('Remover a licença Pro deste dispositivo?')) return;
+document.getElementById('btnRemoverPro').addEventListener('click', async () => {
+    if (!confirm('Remover a licença Pro deste dispositivo? Pode usá-la depois noutro aparelho.')) return;
+    let cod = '';
+    try { cod = localStorage.getItem('licencaPro') || ''; } catch (e) { /* ignora */ }
+    if (cod && navigator.onLine) await pedirServidor('/libertar', cod, 5000);
     try { localStorage.removeItem('licencaPro'); } catch (e) { /* ignora */ }
     proAtivo = false;
     atualizarEstadoPro();
