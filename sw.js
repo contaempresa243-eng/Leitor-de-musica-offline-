@@ -1,5 +1,5 @@
-// Leitor Offline — Service Worker v55 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
-const CACHE_APP = 'leitor-app-v57';
+// Leitor Offline — Service Worker v58 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
+const CACHE_APP = 'leitor-app-v58';
 
 const APP_SHELL = [
     './', './index.html', './manifest.json', './icon.svg',
@@ -66,7 +66,7 @@ async function redePrimeiro(event) {
 }
 
 async function cachePrimeiro(req) {
-    const guardada = await caches.match(req);
+    const guardada = await caches.match(req, { ignoreSearch: true }); // fontes pedem ?v=4.7.0 mas ficam guardadas sem query
     if (guardada) return guardada;
     const resp = await fetch(req);
     if (resp && resp.ok && resp.type === 'basic') {
