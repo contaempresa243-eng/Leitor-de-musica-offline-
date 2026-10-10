@@ -2636,6 +2636,35 @@ function salvarMusicaDB(m) {
     });
 }
 
+function atualizarPastaDB(id, pasta) {
+    return new Promise(resolve => {
+        if (!db) return resolve();
+        const tx = db.transaction(['musicas'], 'readwrite');
+        const store = tx.objectStore('musicas');
+        const req = store.get(id);
+        req.onsuccess = () => { if (req.result) { req.result.pasta = pasta; store.put(req.result); } };
+        tx.oncomplete = () => resolve();
+        tx.onerror = tx.onabort = () => resolve();
+    });
+}
+
+// Encontra uma música já importada (mesmo ficheiro) para a reaproveitar em vez de duplicar.
+// Músicas antigas ficaram todas em "Raiz": se o mesmo ficheiro aparecer agora dentro de uma pasta, mudamos só a pasta.
+function acharMusicaExistente(arquivo, id) {
+    return musicas.find(m => m.id === id) ||
+        musicas.find(m => m.arquivo && m.arquivo.name === arquivo.name && m.arquivo.size === arquivo.size &&
+                          (!m.pasta || m.pasta === 'Raiz'));
+}
+async function aplicarPastaExistente(ex, pasta) {
+    const nova = pasta || 'Raiz';
+    if (nova !== 'Raiz' && (!ex.pasta || ex.pasta === 'Raiz')) {
+        ex.pasta = nova;
+        await atualizarPastaDB(ex.id, nova);
+        return true;
+    }
+    return false;
+}
+
 function carregarMusicasDB() {
     return new Promise((resolve, reject) => {
         if (!db) return resolve([]);
@@ -2778,14 +2807,16 @@ btnAdicionarMais.addEventListener('click', abrirGestorPastas);
 
 async function processarDiretorioFS(dirHandle) {
     const arquivos = [];
-    await varrerDiretorio(dirHandle, '', arquivos);
+    await varrerDiretorio(dirHandle, dirHandle.name, arquivos);
 
     let letrasAlteradas = false;
+    let reorganizadas = 0;
 
     for (const { arquivo, pasta } of arquivos) {
         if (!arquivo.type.startsWith('audio/') && !arquivo.name.endsWith('.m4a')) continue;
         const id = gerarIdArquivo(arquivo) + '__' + pasta;
-        if (musicas.some(m => m.id === id)) continue;
+        const ex = acharMusicaExistente(arquivo, id);
+        if (ex) { if (await aplicarPastaExistente(ex, pasta)) reorganizadas++; continue; }
 
         const musica = {
             id, nome: arquivo.name.replace(/\.[^/.]+$/, ''),
@@ -2807,6 +2838,7 @@ async function processarDiretorioFS(dirHandle) {
     }
     if (letrasAlteradas) salvarMeta('letras', musicasLrc);
 
+    if (reorganizadas) mostrarToast(`📁 ${reorganizadas} música(s) organizadas por pastas`);
     finalizarImportacao();
 }
 
@@ -2823,14 +2855,16 @@ async function varrerDiretorio(dirHandle, caminho, resultado) {
 
 inputPasta.addEventListener('change', async e => {
     const arquivos = Array.from(e.target.files);
+    let temCaminhos = false, reorganizadas = 0;
 
     for (const arquivo of arquivos) {
         if (!arquivo.type.startsWith('audio/') && !arquivo.name.endsWith('.m4a')) continue;
         const id = gerarIdArquivo(arquivo);
-        if (musicas.some(m => m.id === id)) continue;
-
         const partes = (arquivo.webkitRelativePath || arquivo.name).split('/');
-        const pasta = partes.length > 1 ? partes[0] : 'Raiz';
+        const pasta = partes.length > 1 ? partes.slice(0, -1).join('/') : 'Raiz';
+        if (partes.length > 1) temCaminhos = true;
+        const ex = acharMusicaExistente(arquivo, id);
+        if (ex) { if (await aplicarPastaExistente(ex, pasta)) reorganizadas++; continue; }
 
         const musica = {
             id, nome: arquivo.name.replace(/\.[^/.]+$/, ''),
@@ -2854,6 +2888,8 @@ inputPasta.addEventListener('change', async e => {
     if (letrasAlteradas) salvarMeta('letras', musicasLrc);
 
     inputPasta.value = '';
+    if (reorganizadas) mostrarToast(`📁 ${reorganizadas} música(s) organizadas por pastas`);
+    else if (!temCaminhos && arquivos.length) mostrarToast('ℹ️ Este seletor não indica as pastas. Use "Abrir gestor de ficheiros" para agrupar por pastas.');
     finalizarImportacao();
 });
 
@@ -3862,7 +3898,7 @@ function atualizarMediaSession(musica) {
         navigator.mediaSession.metadata = new MediaMetadata({
             title: obterNomeEfetivo(musica),
             artist: obterArtistaEfetivo(musica),
-            album: musica.pasta || 'Leitor Offline',
+            album: (musica.pasta || 'Leitor Offline').split('/').pop(),
             artwork: artwork
         });
     } catch (e) {
@@ -4470,7 +4506,7 @@ function renderizarListaMusicas(lista, mostrarRecentes = false) {
         const capaEfetiva = obterCapaEfetiva(m);
         const nomeEfetivo = obterNomeEfetivo(m);
         const artistaEfetivo = obterArtistaEfetivo(m);
-        const pastaInfo = m.pasta && m.pasta !== 'Raiz' ? ' · ' + m.pasta : '';
+        const pastaInfo = m.pasta && m.pasta !== 'Raiz' ? ' · ' + m.pasta.split('/').pop() : '';
 
         item.innerHTML = `
             <div class="musica-capa" ${capaEfetiva ? `style="background-image:url(${capaEfetiva})"` : ''}>
@@ -4534,11 +4570,13 @@ function renderizarPastas() {
     nomes.forEach(nome => {
         const el = document.createElement('div');
         el.className = 'pasta-item';
+        const folha = nome.split('/').pop();
+        const caminho = nome.includes('/') ? ' · ' + nome.split('/').slice(0, -1).join('/') : '';
         el.innerHTML = `
             <div class="pasta-icone"><i class="fa fa-folder"></i></div>
             <div class="musica-meta">
-                <div class="musica-titulo">${escapeHtml(nome)}</div>
-                <div class="musica-info">${pastas[nome].length} música(s)</div>
+                <div class="musica-titulo">${escapeHtml(folha)}</div>
+                <div class="musica-info">${pastas[nome].length} música(s)${escapeHtml(caminho)}</div>
             </div>
             <i class="fa fa-chevron-right" style="opacity:0.4"></i>
         `;
@@ -4547,7 +4585,7 @@ function renderizarPastas() {
             bibConteudo.innerHTML = `
                 <div style="padding:12px 12px 6px">
                     <button class="bib-aba" id="btnVoltarPastas" style="margin-bottom:8px">
-                        <i class="fa fa-chevron-left mr-2"></i> ${escapeHtml(nome)}
+                        <i class="fa fa-chevron-left mr-2"></i> ${escapeHtml(nome.split('/').pop())}
                     </button>
                 </div>
             `;
@@ -4747,6 +4785,14 @@ async function restaurarSessao() {
 // Edite estas duas linhas: como o utilizador obtém o código (ex.: link do seu WhatsApp)
 const PRO_CONTACTO_TEXTO = 'Para obter o código, fale connosco no WhatsApp: 944 602 099';
 const PRO_CONTACTO_URL = 'https://wa.me/244944602099?text=' + encodeURIComponent('Olá! Quero o código do Leitor Offline Pro.');
+// Quando a app abre a partir da loja (APK/TWA), o referrer é "android-app://…". Nesse modo
+// não mostramos ligação de compra: só o campo para quem já tem um código.
+const MODO_LOJA = (() => {
+    try {
+        if (document.referrer && document.referrer.indexOf('android-app://') === 0) localStorage.setItem('modoLoja', '1');
+        return localStorage.getItem('modoLoja') === '1';
+    } catch (e) { return false; }
+})();
 
 const PRO_CHAVE_PUBLICA = {"kty": "EC", "crv": "P-256", "x": "8jTCs4Q-h4t1WxN2j_ih1xCt6lZZih0CJknb9KYNg_U", "y": "2MAsmQgi7kA-Da1CVGKToDaYYP5rRIPA4o_IsqXBkZE"};
 // Endereço do servidor de ativação (Cloudflare Worker). Vazio = só validação local.
@@ -4821,7 +4867,9 @@ function abrirModalPro(funcao) {
     est.textContent = ''; est.className = 'pro-estado';
     const c = document.getElementById('proContacto');
     c.innerHTML = '';
-    if (PRO_CONTACTO_URL) {
+    if (MODO_LOJA) {
+        c.textContent = 'Já tem um código de ativação? Cole-o acima.';
+    } else if (PRO_CONTACTO_URL) {
         const a = document.createElement('a');
         a.href = PRO_CONTACTO_URL; a.target = '_blank'; a.rel = 'noopener';
         a.textContent = PRO_CONTACTO_TEXTO;
@@ -5390,7 +5438,7 @@ function atualizarNomeNaUI(musica) {
         const infoEl = item.querySelector('.musica-info');
         if (tituloEl) tituloEl.textContent = obterNomeEfetivo(musica);
         if (infoEl) {
-            const pasta = musica.pasta && musica.pasta !== 'Raiz' ? ' · ' + musica.pasta : '';
+            const pasta = musica.pasta && musica.pasta !== 'Raiz' ? ' · ' + musica.pasta.split('/').pop() : '';
             infoEl.textContent = obterArtistaEfetivo(musica) + pasta;
         }
         const capaEl = item.querySelector('.musica-capa');
