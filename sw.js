@@ -1,5 +1,5 @@
-// Leitor Offline — Service Worker v52 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
-const CACHE_APP = 'leitor-app-v52';
+// Leitor Offline — Service Worker v54 (tudo local; GitHub Pages: no-cache evita os 10 min de cache HTTP)
+const CACHE_APP = 'leitor-app-v54';
 
 const APP_SHELL = [
     './', './index.html', './manifest.json', './icon.svg',
@@ -81,6 +81,7 @@ self.addEventListener('fetch', (event) => {
     if (req.method !== 'GET') return;
     const url = new URL(req.url);
     if (url.origin !== self.location.origin) return;
+    if (/\.apk$/i.test(url.pathname)) return; // descargas do APK: sempre direto da rede, sem cache
 
     const rede = req.mode === 'navigate' || /\.(html|js|css|json)$/.test(url.pathname);
     event.respondWith(rede ? redePrimeiro(event) : cachePrimeiro(req));
